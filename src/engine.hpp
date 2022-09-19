@@ -32,14 +32,27 @@ typedef std::vector<node> nodes;
  */
 typedef std::vector<item> items;
 
+
 /**
- * @brief Base class for a NPC, USER or any other Entity living in the game world.
+ * @brief Base class for an NPC, user, or any other entity living in the game world.
  * 
  */
 class Entity {
-	std::string name;
+	std::string entityName;
 	int hp;
 	int stamina;
+	int intelligence;
+	int strength;
+	std::string appearance;
+public:
+	/**
+	 * @brief Construct a new Entity object
+	 * 
+	 * @param n (std::string): Name of the entitiy
+	 * @param app (std::string): Description of the entity
+	 */
+	Entity(std::string n,std::string app):entityName(n),appearance(app){}
+
 };
 
 /**
