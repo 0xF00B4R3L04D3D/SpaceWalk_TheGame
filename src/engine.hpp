@@ -43,7 +43,7 @@ class Entity {
 };
 
 /**
- * @brief Part of the World. A room that contains items, that can be collected.
+ * @brief Part of the World. A room that contains items, that can be collected, players or npc can move in and out of these rooms.
  * 
  * 
  */
@@ -199,6 +199,19 @@ public:
 			inventory.push_back(item(std::move(*it)));
 		}
 		return *this;
+	}
+	/**
+	 * @brief Destroy the Room object. Reset all nodes in the neighours vector and all items in inventory.
+	 *
+	 * 
+	 */
+	~Room() {
+		for (nodes::iterator nit = neighbours.begin(); nit != neighbours.end(); nit++) {
+			nit->reset();
+		}
+		for (items::iterator iit = inventory.begin(); iit != inventory.end(); iit++) {
+			iit->reset();
+		}
 	}
 };
 
