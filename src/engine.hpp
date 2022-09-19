@@ -1,11 +1,233 @@
 #ifndef ENGINE
 #define ENGINE
 /* Game will be built like a linked list and a graph(tree). */
-class Room {
-	std::vector<std::shared_ptr<Room>> parent_nodes;
-	std::vector<std::shared_ptr<Room>> child_nodes; 
+#include <vector>
+#include <memory>
+#include <string>
+#include <map>
+
+class World;
+class Object;
+class Room;
+class Entity;
+
+/**
+ * @typedef Room wrapped in a shared_ptr to be able to connect it to other nodes.
+ * 
+ */
+typedef std::shared_ptr<Room> node;
+/**
+ * @typedef Object wrapped in a unique_ptr, because it can be only owned by one Entity or Room.
+ * 
+ */
+typedef std::unique_ptr<Object> item;
+/**
+ * @typedef Vector of nodes.
+ * 
+ */
+typedef std::vector<node> nodes;
+/**
+ * @typedef Vector of items.
+ * 
+ */
+typedef std::vector<item> items;
+
+/**
+ * @brief Base class for a NPC, USER or any other Entity living in the game world.
+ * 
+ */
+class Entity {
 	std::string name;
+	int hp;
+	int stamina;
+};
+
+/**
+ * @brief Part of the World. A room that contains items, that can be collected.
+ * 
+ * 
+ */
+class Room {
+	nodes neighbours; // Neighbouring rooms.
+	std::string roomName; // Name of the room.
+	std::string roomID; // ID of the room, that connects a key to this room.
+	items inventory; // Items, that can be found in the room.
+	std::string description; // Description of the room.
 public:
-	Room(std::vector<std::shared_ptr<Room>> ps, std::vector<std::shared_ptr<Room>> cs) : parent_nodes(ps), child_nodes(cs);
+	/**
+	 * @brief Construct a new Room object
+	 * 
+	 * @param n (const std::string&): The name of the room.
+	 */
+	Room(const std::string& n) : roomName(n) {}
+	/**
+	 * @brief Construct a new Room object
+	 * 
+	 * @param n (const std::string&): The name of the room.
+	 * @param inv (item&): An item that will be added to the inventory of the room.
+	 */
+	Room(const std::string& n, item& inv) : roomName(n) {inventory.push_back(std::move(inv));}
+	/**
+	 * @brief Construct a new Room object
+	 * 
+	 * @param n (const std::string&): The name of the room.
+	 * @param inv (items&): Vector of items, that will be added to the inventory of the room.
+	 */
+	Room(const std::string& n, items& inv) : roomName(n) {
+		addItems(inv);
+	}
+	/**
+	 * @brief Construct a new Room object
+	 * 
+	 * @param n (const std::string&): The name of the room.
+	 * @param ne (node&): A node that will be added to the neighbours of the room.
+	 */
+	Room(const std::string& n, node& ne) : roomName(n) {
+		addNeighbour(ne);
+	}
+	/**
+	 * @brief Construct a new Room object
+	 * 
+	 * @param n (const std::string&): The name of the room.
+	 * @param ns (nodes&): Nodes that will be the neighbourhood of the room.
+	 */
+	Room(const std::string& n, nodes& ns) : roomName(n) {
+		addNeighbours(ns);
+	}
+	/**
+	 * @brief Construct a new Room object
+	 * 
+	 * @param n (const std::string&): The name of the room.
+	 * @param inv (item&): An item that will be added to the inventory of the room.
+	 * @param ne (node&): A node that will be added to the neighbours of the room.
+	 */
+	Room(const std::string& n, item& inv, node& ne) : roomName(n) {
+		inventory.push_back(std::move(inv));
+		addNeighbour(ne);
+	}
+	/**
+	 * @brief Construct a new Room object
+	 * 
+	 * @param n (const std::string&): The name of the room.
+	 * @param inv (item&): An item that will be added to the inventory of the room.
+	 * @param ns (nodes&): Nodes that will be the neighbourhood of the room.
+	 */
+	Room(const std::string& n, item& inv, nodes& ns) : roomName(n) {
+		inventory.push_back(std::move(inv));
+		addNeighbours(ns);
+	}
+	/**
+	 * @brief Construct a new Room object
+	 * 
+	 * @param n (const std::string&): The name of the room.
+	 * @param inv (items&): Vector of items, that will be added to the inventory of the room. 
+	 * @param ne (node&): A node that will be added to the neighbours of the room.
+	 */
+	Room(const std::string& n, items& inv, node& ne) : roomName(n) {
+		addNeighbour(ne);
+		addItems(inv);
+	}
+	/**
+	 * @brief Construct a new Room object
+	 * 
+	 * @param n (const std::string&): The name of the room.
+	 * @param inv (items&): Vector of items, that will be added to the inventory of the room. 
+	 * @param ns (nodes&): Nodes that will be the neighbourhood of the room.
+	 */
+	Room(const std::string& n, items& inv, nodes& ns) : roomName(n) {
+		addNeighbours(ns);
+		addItems(inv);
+	}
+	/**
+	 * @brief Get the Name object
+	 * 
+	 * @return roomName (std::string) 
+	 */
+	std::string getName() const {return roomName;}
+	/**
+	 * @brief Get the Neighbours object
+	 * 
+	 * @return neighbours (const nodes) 
+	 */
+	nodes getNeighbours() const {return neighbours;}	
+	/**
+	 * @brief Add a neighbour to the Neighours object
+	 * 
+	 * @param nn (node&) A new Room, that will be added to the Neighbours object.
+	 * @return Room&
+	 */
+	Room& addNeighbour(node& nn) {
+		neighbours.push_back(node(nn));
+		return *this;
+	}
+	/**
+	 * @brief Add multiple neighbours to the Neighbours object 
+	 * 
+	 * @param ns (nodes&) Vector of Neighbours object 
+	 * @return Room& 
+	 */
+	Room& addNeighbours(nodes& ns) {
+		for (nodes::const_iterator it = ns.cbegin(); it != ns.cend(); it++) {
+			neighbours.push_back(node(*it));
+		}
+		return *this;
+	}
+	/**
+	 * @brief Get the Items object
+	 * 
+	 * @return items const& 
+	 */
+	items const& getItems() {return inventory;}	
+	/**
+	 * @brief Add new item to the Inventory of the Room 
+	 * 
+	 * @param i (item&) new Item
+	 * @return Room& 
+	 */
+	Room& addItem(item& i) {
+		inventory.push_back(item(std::move(i)));
+		return *this;
+	}
+	/**
+	 * @brief Add new Items to the Inventory of the Room 
+	 * 
+	 * @param inv (items&) Vector of Items to be added to the Inventory of the Room
+	 * @return Room& 
+	 */
+	Room& addItems(items& inv) {
+		for (items::iterator it = inv.begin(); it != inv.end(); it++) {
+			inventory.push_back(item(std::move(*it)));
+		}
+		return *this;
+	}
+};
+
+/**
+ * @brief Base class for any object that can be owned by an Entity or Room.
+ * 
+ */
+class Object {
+	std::string objectName;
+public:
+	/**
+	 * @brief Construct a new Object object
+	 * 
+	 * @param n (std::string&) Name of the Object
+	 */
+	Object(const std::string& n) : objectName(n) {}
+	/**
+	 * @brief Get the Name object
+	 * 
+	 * @return objectName (std::string) 
+	 */
+	std::string getName() const {return objectName;}
+};
+
+/**
+ * @brief An object that can open a room.
+ * 
+ */
+class Key : public Object {
+	std::string keyID;
 };
 #endif
