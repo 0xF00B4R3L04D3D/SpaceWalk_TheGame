@@ -134,7 +134,7 @@ public:
 	 * @return Room& 
 	 */
 	Room& addItem(item& i) {
-		inventory.push_back(item(std::move(i)));
+		inventory.emplace_back(std::move(i));
 		return *this;
 	}
 	/**
@@ -145,7 +145,7 @@ public:
 	 */
 	Room& addItems(items& inv) {
 		for (items::iterator it = inv.begin(); it != inv.end(); it++) {
-			inventory.push_back(item(std::move(*it)));
+			inventory.emplace_back(std::move(*it));
 		}
 		return *this;
 	}
@@ -200,6 +200,9 @@ public:
 	 * @return objectDescription (std::string) 
 	 */
 	std::string getDescription() const {return objectDescriptor;}
+	~Object() {
+		std::cerr << "LOG: ObjectID: " << objID << " deleted" << std::endl;
+	}
 };
 
 /**
@@ -232,6 +235,18 @@ public:
 	 */
 	void RoomFactory(const std::string& name, int id, const std::string& desc) {
 		worldRooms.emplace_back(new Room(name, id, desc));
+	}
+	/**
+	 * @brief Destroy the World object. This is very importand step, because all things in the world are contained in smart pointers.
+	 * 
+	 */
+	~World() {
+		for (nodes::iterator it = worldRooms.begin(); it != worldRooms.end(); it++) {
+			it->reset();
+		}
+		for (entities::iterator it = population.begin(); it != population.end(); it++) {
+			it->reset();
+		}
 	}
 };
 #endif
