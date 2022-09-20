@@ -13,6 +13,7 @@ configure_file(${PROJECT_SOURCE_DIR}/src/Config.h.in Config.h)
 # set up options to build tests
 option(TEST_ROOM "Test room class of engine.h" OFF)
 option(TEST_OBJECT "Test object class of engine.h" OFF)
+option(TEST_UNIT "Build unittest, that tries to cover the core functionalities of the game." OFF)
 
 # add include directories, where header files can be found
 include_directories("${PROJECT_SOURCE_DIR}/src")
@@ -50,6 +51,8 @@ if(TEST_ROOM)
 	runtest("tests/test_room.cpp")
 elseif(TEST_OBJECT)
 	runtest("tests/test_object.cpp")
+elseif(TEST_UNIT)
+	runtest("tests/test_unit.cpp")
 else()
 	buildworld()
 endif()
