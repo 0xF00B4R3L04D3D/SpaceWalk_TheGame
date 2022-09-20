@@ -24,3 +24,7 @@ TEST(RoomTest, constructor_test) {
     EXPECT_EQ(1, Room1->getID());
     EXPECT_EQ("This room is created to test the constructor.", Room1->getDescription());
 }
+
+TEST(FailTest, tofail) {
+    EXPECT_EQ(1, 2);
+}
