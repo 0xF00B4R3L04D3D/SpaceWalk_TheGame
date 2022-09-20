@@ -1,0 +1,243 @@
+\hypertarget{gtest-assertion-result_8h_source}{}\doxysection{gtest-\/assertion-\/result.h}
+\label{gtest-assertion-result_8h_source}\index{build/\_deps/googletest-\/src/googletest/include/gtest/gtest-\/assertion-\/result.h@{build/\_deps/googletest-\/src/googletest/include/gtest/gtest-\/assertion-\/result.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{comment}{// Copyright 2005, Google Inc.}}
+\DoxyCodeLine{2 \textcolor{comment}{// All rights reserved.}}
+\DoxyCodeLine{3 \textcolor{comment}{//}}
+\DoxyCodeLine{4 \textcolor{comment}{// Redistribution and use in source and binary forms, with or without}}
+\DoxyCodeLine{5 \textcolor{comment}{// modification, are permitted provided that the following conditions are}}
+\DoxyCodeLine{6 \textcolor{comment}{// met:}}
+\DoxyCodeLine{7 \textcolor{comment}{//}}
+\DoxyCodeLine{8 \textcolor{comment}{//     * Redistributions of source code must retain the above copyright}}
+\DoxyCodeLine{9 \textcolor{comment}{// notice, this list of conditions and the following disclaimer.}}
+\DoxyCodeLine{10 \textcolor{comment}{//     * Redistributions in binary form must reproduce the above}}
+\DoxyCodeLine{11 \textcolor{comment}{// copyright notice, this list of conditions and the following disclaimer}}
+\DoxyCodeLine{12 \textcolor{comment}{// in the documentation and/or other materials provided with the}}
+\DoxyCodeLine{13 \textcolor{comment}{// distribution.}}
+\DoxyCodeLine{14 \textcolor{comment}{//     * Neither the name of Google Inc. nor the names of its}}
+\DoxyCodeLine{15 \textcolor{comment}{// contributors may be used to endorse or promote products derived from}}
+\DoxyCodeLine{16 \textcolor{comment}{// this software without specific prior written permission.}}
+\DoxyCodeLine{17 \textcolor{comment}{//}}
+\DoxyCodeLine{18 \textcolor{comment}{// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS}}
+\DoxyCodeLine{19 \textcolor{comment}{// "{}AS IS"{} AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT}}
+\DoxyCodeLine{20 \textcolor{comment}{// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR}}
+\DoxyCodeLine{21 \textcolor{comment}{// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT}}
+\DoxyCodeLine{22 \textcolor{comment}{// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,}}
+\DoxyCodeLine{23 \textcolor{comment}{// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT}}
+\DoxyCodeLine{24 \textcolor{comment}{// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,}}
+\DoxyCodeLine{25 \textcolor{comment}{// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY}}
+\DoxyCodeLine{26 \textcolor{comment}{// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT}}
+\DoxyCodeLine{27 \textcolor{comment}{// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE}}
+\DoxyCodeLine{28 \textcolor{comment}{// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.}}
+\DoxyCodeLine{29 }
+\DoxyCodeLine{30 \textcolor{comment}{// The Google C++ Testing and Mocking Framework (Google Test)}}
+\DoxyCodeLine{31 \textcolor{comment}{//}}
+\DoxyCodeLine{32 \textcolor{comment}{// This file implements the AssertionResult type.}}
+\DoxyCodeLine{33 }
+\DoxyCodeLine{34 \textcolor{comment}{// IWYU pragma: private, include "{}gtest/gtest.h"{}}}
+\DoxyCodeLine{35 \textcolor{comment}{// IWYU pragma: friend gtest/.*}}
+\DoxyCodeLine{36 \textcolor{comment}{// IWYU pragma: friend gmock/.*}}
+\DoxyCodeLine{37 }
+\DoxyCodeLine{38 \textcolor{preprocessor}{\#ifndef GOOGLETEST\_INCLUDE\_GTEST\_GTEST\_ASSERTION\_RESULT\_H\_}}
+\DoxyCodeLine{39 \textcolor{preprocessor}{\#define GOOGLETEST\_INCLUDE\_GTEST\_GTEST\_ASSERTION\_RESULT\_H\_}}
+\DoxyCodeLine{40 }
+\DoxyCodeLine{41 \textcolor{preprocessor}{\#include <memory>}}
+\DoxyCodeLine{42 \textcolor{preprocessor}{\#include <ostream>}}
+\DoxyCodeLine{43 \textcolor{preprocessor}{\#include <string>}}
+\DoxyCodeLine{44 \textcolor{preprocessor}{\#include <type\_traits>}}
+\DoxyCodeLine{45 }
+\DoxyCodeLine{46 \textcolor{preprocessor}{\#include "{}gtest/gtest-\/message.h"{}}}
+\DoxyCodeLine{47 \textcolor{preprocessor}{\#include "{}gtest/internal/gtest-\/port.h"{}}}
+\DoxyCodeLine{48 }
+\DoxyCodeLine{49 GTEST\_DISABLE\_MSC\_WARNINGS\_PUSH\_(4251                                   \(\backslash\)}
+\DoxyCodeLine{50 \textcolor{comment}{/* class A needs to have dll-\/interface to be used by clients of class B */})}
+\DoxyCodeLine{51 }
+\DoxyCodeLine{52 namespace testing \{}
+\DoxyCodeLine{53 }
+\DoxyCodeLine{54 \textcolor{comment}{// A class for indicating whether an assertion was successful.  When}}
+\DoxyCodeLine{55 \textcolor{comment}{// the assertion wasn't successful, the AssertionResult object}}
+\DoxyCodeLine{56 \textcolor{comment}{// remembers a non-\/empty message that describes how it failed.}}
+\DoxyCodeLine{57 \textcolor{comment}{//}}
+\DoxyCodeLine{58 \textcolor{comment}{// To create an instance of this class, use one of the factory functions}}
+\DoxyCodeLine{59 \textcolor{comment}{// (AssertionSuccess() and AssertionFailure()).}}
+\DoxyCodeLine{60 \textcolor{comment}{//}}
+\DoxyCodeLine{61 \textcolor{comment}{// This class is useful for two purposes:}}
+\DoxyCodeLine{62 \textcolor{comment}{//   1. Defining predicate functions to be used with Boolean test assertions}}
+\DoxyCodeLine{63 \textcolor{comment}{//      EXPECT\_TRUE/EXPECT\_FALSE and their ASSERT\_ counterparts}}
+\DoxyCodeLine{64 \textcolor{comment}{//   2. Defining predicate-\/format functions to be}}
+\DoxyCodeLine{65 \textcolor{comment}{//      used with predicate assertions (ASSERT\_PRED\_FORMAT*, etc).}}
+\DoxyCodeLine{66 \textcolor{comment}{//}}
+\DoxyCodeLine{67 \textcolor{comment}{// For example, if you define IsEven predicate:}}
+\DoxyCodeLine{68 \textcolor{comment}{//}}
+\DoxyCodeLine{69 \textcolor{comment}{//   testing::AssertionResult IsEven(int n) \{}}
+\DoxyCodeLine{70 \textcolor{comment}{//     if ((n \% 2) == 0)}}
+\DoxyCodeLine{71 \textcolor{comment}{//       return testing::AssertionSuccess();}}
+\DoxyCodeLine{72 \textcolor{comment}{//     else}}
+\DoxyCodeLine{73 \textcolor{comment}{//       return testing::AssertionFailure() << n << "{} is odd"{};}}
+\DoxyCodeLine{74 \textcolor{comment}{//   \}}}
+\DoxyCodeLine{75 \textcolor{comment}{//}}
+\DoxyCodeLine{76 \textcolor{comment}{// Then the failed expectation EXPECT\_TRUE(IsEven(Fib(5)))}}
+\DoxyCodeLine{77 \textcolor{comment}{// will print the message}}
+\DoxyCodeLine{78 \textcolor{comment}{//}}
+\DoxyCodeLine{79 \textcolor{comment}{//   Value of: IsEven(Fib(5))}}
+\DoxyCodeLine{80 \textcolor{comment}{//     Actual: false (5 is odd)}}
+\DoxyCodeLine{81 \textcolor{comment}{//   Expected: true}}
+\DoxyCodeLine{82 \textcolor{comment}{//}}
+\DoxyCodeLine{83 \textcolor{comment}{// instead of a more opaque}}
+\DoxyCodeLine{84 \textcolor{comment}{//}}
+\DoxyCodeLine{85 \textcolor{comment}{//   Value of: IsEven(Fib(5))}}
+\DoxyCodeLine{86 \textcolor{comment}{//     Actual: false}}
+\DoxyCodeLine{87 \textcolor{comment}{//   Expected: true}}
+\DoxyCodeLine{88 \textcolor{comment}{//}}
+\DoxyCodeLine{89 \textcolor{comment}{// in case IsEven is a simple Boolean predicate.}}
+\DoxyCodeLine{90 \textcolor{comment}{//}}
+\DoxyCodeLine{91 \textcolor{comment}{// If you expect your predicate to be reused and want to support informative}}
+\DoxyCodeLine{92 \textcolor{comment}{// messages in EXPECT\_FALSE and ASSERT\_FALSE (negative assertions show up}}
+\DoxyCodeLine{93 \textcolor{comment}{// about half as often as positive ones in our tests), supply messages for}}
+\DoxyCodeLine{94 \textcolor{comment}{// both success and failure cases:}}
+\DoxyCodeLine{95 \textcolor{comment}{//}}
+\DoxyCodeLine{96 \textcolor{comment}{//   testing::AssertionResult IsEven(int n) \{}}
+\DoxyCodeLine{97 \textcolor{comment}{//     if ((n \% 2) == 0)}}
+\DoxyCodeLine{98 \textcolor{comment}{//       return testing::AssertionSuccess() << n << "{} is even"{};}}
+\DoxyCodeLine{99 \textcolor{comment}{//     else}}
+\DoxyCodeLine{100 \textcolor{comment}{//       return testing::AssertionFailure() << n << "{} is odd"{};}}
+\DoxyCodeLine{101 \textcolor{comment}{//   \}}}
+\DoxyCodeLine{102 \textcolor{comment}{//}}
+\DoxyCodeLine{103 \textcolor{comment}{// Then a statement EXPECT\_FALSE(IsEven(Fib(6))) will print}}
+\DoxyCodeLine{104 \textcolor{comment}{//}}
+\DoxyCodeLine{105 \textcolor{comment}{//   Value of: IsEven(Fib(6))}}
+\DoxyCodeLine{106 \textcolor{comment}{//     Actual: true (8 is even)}}
+\DoxyCodeLine{107 \textcolor{comment}{//   Expected: false}}
+\DoxyCodeLine{108 \textcolor{comment}{//}}
+\DoxyCodeLine{109 \textcolor{comment}{// NB: Predicates that support negative Boolean assertions have reduced}}
+\DoxyCodeLine{110 \textcolor{comment}{// performance in positive ones so be careful not to use them in tests}}
+\DoxyCodeLine{111 \textcolor{comment}{// that have lots (tens of thousands) of positive Boolean assertions.}}
+\DoxyCodeLine{112 \textcolor{comment}{//}}
+\DoxyCodeLine{113 \textcolor{comment}{// To use this class with EXPECT\_PRED\_FORMAT assertions such as:}}
+\DoxyCodeLine{114 \textcolor{comment}{//}}
+\DoxyCodeLine{115 \textcolor{comment}{//   // Verifies that Foo() returns an even number.}}
+\DoxyCodeLine{116 \textcolor{comment}{//   EXPECT\_PRED\_FORMAT1(IsEven, Foo());}}
+\DoxyCodeLine{117 \textcolor{comment}{//}}
+\DoxyCodeLine{118 \textcolor{comment}{// you need to define:}}
+\DoxyCodeLine{119 \textcolor{comment}{//}}
+\DoxyCodeLine{120 \textcolor{comment}{//   testing::AssertionResult IsEven(const char* expr, int n) \{}}
+\DoxyCodeLine{121 \textcolor{comment}{//     if ((n \% 2) == 0)}}
+\DoxyCodeLine{122 \textcolor{comment}{//       return testing::AssertionSuccess();}}
+\DoxyCodeLine{123 \textcolor{comment}{//     else}}
+\DoxyCodeLine{124 \textcolor{comment}{//       return testing::AssertionFailure()}}
+\DoxyCodeLine{125 \textcolor{comment}{//         << "{}Expected: "{} << expr << "{} is even\(\backslash\)n  Actual: it's "{} << n;}}
+\DoxyCodeLine{126 \textcolor{comment}{//   \}}}
+\DoxyCodeLine{127 \textcolor{comment}{//}}
+\DoxyCodeLine{128 \textcolor{comment}{// If Foo() returns 5, you will see the following message:}}
+\DoxyCodeLine{129 \textcolor{comment}{//}}
+\DoxyCodeLine{130 \textcolor{comment}{//   Expected: Foo() is even}}
+\DoxyCodeLine{131 \textcolor{comment}{//     Actual: it's 5}}
+\DoxyCodeLine{132 \textcolor{comment}{//}}
+\DoxyCodeLine{133 \textcolor{keyword}{class }GTEST\_API\_ AssertionResult \{}
+\DoxyCodeLine{134  \textcolor{keyword}{public}:}
+\DoxyCodeLine{135   \textcolor{comment}{// Copy constructor.}}
+\DoxyCodeLine{136   \textcolor{comment}{// Used in EXPECT\_TRUE/FALSE(assertion\_result).}}
+\DoxyCodeLine{137   AssertionResult(\textcolor{keyword}{const} AssertionResult\& other);}
+\DoxyCodeLine{138 }
+\DoxyCodeLine{139 \textcolor{comment}{// C4800 is a level 3 warning in Visual Studio 2015 and earlier.}}
+\DoxyCodeLine{140 \textcolor{comment}{// This warning is not emitted in Visual Studio 2017.}}
+\DoxyCodeLine{141 \textcolor{comment}{// This warning is off by default starting in Visual Studio 2019 but can be}}
+\DoxyCodeLine{142 \textcolor{comment}{// enabled with command-\/line options.}}
+\DoxyCodeLine{143 \textcolor{preprocessor}{\#if defined(\_MSC\_VER) \&\& (\_MSC\_VER < 1910 || \_MSC\_VER >= 1920)}}
+\DoxyCodeLine{144   GTEST\_DISABLE\_MSC\_WARNINGS\_PUSH\_(4800 \textcolor{comment}{/* forcing value to bool */})}
+\DoxyCodeLine{145 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{146 }
+\DoxyCodeLine{147   \textcolor{comment}{// Used in the EXPECT\_TRUE/FALSE(bool\_expression).}}
+\DoxyCodeLine{148   \textcolor{comment}{//}}
+\DoxyCodeLine{149   \textcolor{comment}{// T must be contextually convertible to bool.}}
+\DoxyCodeLine{150   \textcolor{comment}{//}}
+\DoxyCodeLine{151   \textcolor{comment}{// The second parameter prevents this overload from being considered if}}
+\DoxyCodeLine{152   \textcolor{comment}{// the argument is implicitly convertible to AssertionResult. In that case}}
+\DoxyCodeLine{153   \textcolor{comment}{// we want AssertionResult's copy constructor to be used.}}
+\DoxyCodeLine{154   \textcolor{keyword}{template} <\textcolor{keyword}{typename} T>}
+\DoxyCodeLine{155   \textcolor{keyword}{explicit} AssertionResult(}
+\DoxyCodeLine{156       \textcolor{keyword}{const} T\& success,}
+\DoxyCodeLine{157       \textcolor{keyword}{typename} std::enable\_if<}
+\DoxyCodeLine{158           !std::is\_convertible<T, AssertionResult>::value>::type*}
+\DoxyCodeLine{159       \textcolor{comment}{/*enabler*/}}
+\DoxyCodeLine{160       = \textcolor{keyword}{nullptr})}
+\DoxyCodeLine{161       : success\_(success) \{\}}
+\DoxyCodeLine{162 }
+\DoxyCodeLine{163 \textcolor{preprocessor}{\#if defined(\_MSC\_VER) \&\& (\_MSC\_VER < 1910 || \_MSC\_VER >= 1920)}}
+\DoxyCodeLine{164   GTEST\_DISABLE\_MSC\_WARNINGS\_POP\_()}
+\DoxyCodeLine{165 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{166 }
+\DoxyCodeLine{167   \textcolor{comment}{// Assignment operator.}}
+\DoxyCodeLine{168   AssertionResult\& operator=(AssertionResult other) \{}
+\DoxyCodeLine{169     swap(other);}
+\DoxyCodeLine{170     \textcolor{keywordflow}{return} *\textcolor{keyword}{this};}
+\DoxyCodeLine{171   \}}
+\DoxyCodeLine{172 }
+\DoxyCodeLine{173   \textcolor{comment}{// Returns true if and only if the assertion succeeded.}}
+\DoxyCodeLine{174   \textcolor{keyword}{operator} bool()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} success\_; \}  \textcolor{comment}{// NOLINT}}
+\DoxyCodeLine{175 }
+\DoxyCodeLine{176   \textcolor{comment}{// Returns the assertion's negation. Used with EXPECT/ASSERT\_FALSE.}}
+\DoxyCodeLine{177   AssertionResult operator!() \textcolor{keyword}{const};}
+\DoxyCodeLine{178 }
+\DoxyCodeLine{179   \textcolor{comment}{// Returns the text streamed into this AssertionResult. Test assertions}}
+\DoxyCodeLine{180   \textcolor{comment}{// use it when they fail (i.e., the predicate's outcome doesn't match the}}
+\DoxyCodeLine{181   \textcolor{comment}{// assertion's expectation). When nothing has been streamed into the}}
+\DoxyCodeLine{182   \textcolor{comment}{// object, returns an empty string.}}
+\DoxyCodeLine{183   \textcolor{keyword}{const} \textcolor{keywordtype}{char}* message()\textcolor{keyword}{ const }\{}
+\DoxyCodeLine{184     \textcolor{keywordflow}{return} message\_.get() != \textcolor{keyword}{nullptr} ? message\_-\/>c\_str() : \textcolor{stringliteral}{"{}"{}};}
+\DoxyCodeLine{185   \}}
+\DoxyCodeLine{186   \textcolor{comment}{// Deprecated; please use message() instead.}}
+\DoxyCodeLine{187   \textcolor{keyword}{const} \textcolor{keywordtype}{char}* failure\_message()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} message(); \}}
+\DoxyCodeLine{188 }
+\DoxyCodeLine{189   \textcolor{comment}{// Streams a custom failure message into this object.}}
+\DoxyCodeLine{190   \textcolor{keyword}{template} <\textcolor{keyword}{typename} T>}
+\DoxyCodeLine{191   AssertionResult\& operator<<(\textcolor{keyword}{const} T\& value) \{}
+\DoxyCodeLine{192     AppendMessage(Message() << value);}
+\DoxyCodeLine{193     \textcolor{keywordflow}{return} *\textcolor{keyword}{this};}
+\DoxyCodeLine{194   \}}
+\DoxyCodeLine{195 }
+\DoxyCodeLine{196   \textcolor{comment}{// Allows streaming basic output manipulators such as endl or flush into}}
+\DoxyCodeLine{197   \textcolor{comment}{// this object.}}
+\DoxyCodeLine{198   AssertionResult\& operator<<(}
+\DoxyCodeLine{199       ::std::ostream\& (*basic\_manipulator)(::std::ostream\& stream)) \{}
+\DoxyCodeLine{200     AppendMessage(Message() << basic\_manipulator);}
+\DoxyCodeLine{201     \textcolor{keywordflow}{return} *\textcolor{keyword}{this};}
+\DoxyCodeLine{202   \}}
+\DoxyCodeLine{203 }
+\DoxyCodeLine{204  \textcolor{keyword}{private}:}
+\DoxyCodeLine{205   \textcolor{comment}{// Appends the contents of message to message\_.}}
+\DoxyCodeLine{206   \textcolor{keywordtype}{void} AppendMessage(\textcolor{keyword}{const} Message\& a\_message) \{}
+\DoxyCodeLine{207     \textcolor{keywordflow}{if} (message\_.get() == \textcolor{keyword}{nullptr}) message\_.reset(new ::std::string);}
+\DoxyCodeLine{208     message\_-\/>append(a\_message.GetString().c\_str());}
+\DoxyCodeLine{209   \}}
+\DoxyCodeLine{210 }
+\DoxyCodeLine{211   \textcolor{comment}{// Swap the contents of this AssertionResult with other.}}
+\DoxyCodeLine{212   \textcolor{keywordtype}{void} swap(AssertionResult\& other);}
+\DoxyCodeLine{213 }
+\DoxyCodeLine{214   \textcolor{comment}{// Stores result of the assertion predicate.}}
+\DoxyCodeLine{215   \textcolor{keywordtype}{bool} success\_;}
+\DoxyCodeLine{216   \textcolor{comment}{// Stores the message describing the condition in case the expectation}}
+\DoxyCodeLine{217   \textcolor{comment}{// construct is not satisfied with the predicate's outcome.}}
+\DoxyCodeLine{218   \textcolor{comment}{// Referenced via a pointer to avoid taking too much stack frame space}}
+\DoxyCodeLine{219   \textcolor{comment}{// with test assertions.}}
+\DoxyCodeLine{220   std::unique\_ptr< ::std::string> message\_;}
+\DoxyCodeLine{221 \};}
+\DoxyCodeLine{222 }
+\DoxyCodeLine{223 \textcolor{comment}{// Makes a successful assertion result.}}
+\DoxyCodeLine{224 GTEST\_API\_ AssertionResult AssertionSuccess();}
+\DoxyCodeLine{225 }
+\DoxyCodeLine{226 \textcolor{comment}{// Makes a failed assertion result.}}
+\DoxyCodeLine{227 GTEST\_API\_ AssertionResult AssertionFailure();}
+\DoxyCodeLine{228 }
+\DoxyCodeLine{229 \textcolor{comment}{// Makes a failed assertion result with the given failure message.}}
+\DoxyCodeLine{230 \textcolor{comment}{// Deprecated; use AssertionFailure() << msg.}}
+\DoxyCodeLine{231 GTEST\_API\_ AssertionResult AssertionFailure(\textcolor{keyword}{const} Message\& msg);}
+\DoxyCodeLine{232 }
+\DoxyCodeLine{233 \}  \textcolor{comment}{// namespace testing}}
+\DoxyCodeLine{234 }
+\DoxyCodeLine{235 GTEST\_DISABLE\_MSC\_WARNINGS\_POP\_()  \textcolor{comment}{// 4251}}
+\DoxyCodeLine{236 }
+\DoxyCodeLine{237 \textcolor{preprocessor}{\#endif  }\textcolor{comment}{// GOOGLETEST\_INCLUDE\_GTEST\_GTEST\_ASSERTION\_RESULT\_H\_}}
+
+\end{DoxyCode}

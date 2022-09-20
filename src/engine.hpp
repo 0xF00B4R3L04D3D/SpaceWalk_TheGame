@@ -5,11 +5,14 @@
 #include <memory>
 #include <string>
 #include <map>
+#include "tinyxml2.h"
 
 class World;
 class Object;
 class Room;
 class Entity;
+class Mission;
+class Choice;
 
 /**
  * @typedef Room wrapped in a shared_ptr to be able to connect it to other nodes.
@@ -22,6 +25,11 @@ typedef std::shared_ptr<Room> node;
  */
 typedef std::unique_ptr<Object> item;
 /**
+ * @typedef Entity wrapped in shared_ptr, so World can keep track.
+ * 
+ */
+typedef std::shared_ptr<Entity> ent;
+/**
  * @typedef Vector of nodes.
  * 
  */
@@ -31,6 +39,11 @@ typedef std::vector<node> nodes;
  * 
  */
 typedef std::vector<item> items;
+/**
+ * @typedef Vector of entities.
+ * 
+ */
+typedef std::vector<ent> entities;
 
 /**
  * @brief Base class for a NPC, USER or any other Entity living in the game world.
@@ -49,101 +62,37 @@ class Entity {
  */
 class Room {
 	nodes neighbours; // Neighbouring rooms.
-	std::string roomName; // Name of the room.
-	std::string roomID; // ID of the room, that connects a key to this room.
+	const std::string roomName; // Name of the room.
+	const int roomID; // ID of the room, that connects a key to this room.
 	items inventory; // Items, that can be found in the room.
-	std::string description; // Description of the room.
+	const std::string description; // Description of the room.
 public:
 	/**
 	 * @brief Construct a new Room object
 	 * 
-	 * @param n (const std::string&): The name of the room.
+	 * @param n (std::string&): Name of the Room that cant be changed later. 
+	 * @param id (int): This have to be a unique ID to be able to connect keys with rooms. 
+	 * @param desc (std::string&): Description of the room. Cant be changed later.
 	 */
-	Room(const std::string& n) : roomName(n) {}
+	Room(const std::string& n, int id, const std::string& desc) : roomName(n), roomID(id), description(desc) {}
 	/**
-	 * @brief Construct a new Room object
-	 * 
-	 * @param n (const std::string&): The name of the room.
-	 * @param inv (item&): An item that will be added to the inventory of the room.
-	 */
-	Room(const std::string& n, item& inv) : roomName(n) {inventory.push_back(std::move(inv));}
-	/**
-	 * @brief Construct a new Room object
-	 * 
-	 * @param n (const std::string&): The name of the room.
-	 * @param inv (items&): Vector of items, that will be added to the inventory of the room.
-	 */
-	Room(const std::string& n, items& inv) : roomName(n) {
-		addItems(inv);
-	}
-	/**
-	 * @brief Construct a new Room object
-	 * 
-	 * @param n (const std::string&): The name of the room.
-	 * @param ne (node&): A node that will be added to the neighbours of the room.
-	 */
-	Room(const std::string& n, node& ne) : roomName(n) {
-		addNeighbour(ne);
-	}
-	/**
-	 * @brief Construct a new Room object
-	 * 
-	 * @param n (const std::string&): The name of the room.
-	 * @param ns (nodes&): Nodes that will be the neighbourhood of the room.
-	 */
-	Room(const std::string& n, nodes& ns) : roomName(n) {
-		addNeighbours(ns);
-	}
-	/**
-	 * @brief Construct a new Room object
-	 * 
-	 * @param n (const std::string&): The name of the room.
-	 * @param inv (item&): An item that will be added to the inventory of the room.
-	 * @param ne (node&): A node that will be added to the neighbours of the room.
-	 */
-	Room(const std::string& n, item& inv, node& ne) : roomName(n) {
-		inventory.push_back(std::move(inv));
-		addNeighbour(ne);
-	}
-	/**
-	 * @brief Construct a new Room object
-	 * 
-	 * @param n (const std::string&): The name of the room.
-	 * @param inv (item&): An item that will be added to the inventory of the room.
-	 * @param ns (nodes&): Nodes that will be the neighbourhood of the room.
-	 */
-	Room(const std::string& n, item& inv, nodes& ns) : roomName(n) {
-		inventory.push_back(std::move(inv));
-		addNeighbours(ns);
-	}
-	/**
-	 * @brief Construct a new Room object
-	 * 
-	 * @param n (const std::string&): The name of the room.
-	 * @param inv (items&): Vector of items, that will be added to the inventory of the room. 
-	 * @param ne (node&): A node that will be added to the neighbours of the room.
-	 */
-	Room(const std::string& n, items& inv, node& ne) : roomName(n) {
-		addNeighbour(ne);
-		addItems(inv);
-	}
-	/**
-	 * @brief Construct a new Room object
-	 * 
-	 * @param n (const std::string&): The name of the room.
-	 * @param inv (items&): Vector of items, that will be added to the inventory of the room. 
-	 * @param ns (nodes&): Nodes that will be the neighbourhood of the room.
-	 */
-	Room(const std::string& n, items& inv, nodes& ns) : roomName(n) {
-		addNeighbours(ns);
-		addItems(inv);
-	}
-	/**
-	 * @brief Get the Name object
+	 * @brief Get the Name of the Room
 	 * 
 	 * @return roomName (std::string) 
 	 */
 	std::string getName() const {return roomName;}
+	/**
+	 * @brief Get the roomID of the Room 
+	 * 
+	 * @return roomID (int) 
+	 */
+	int getID() const {return roomID;}
+	/**
+	 * @brief Get the Description of the Room
+	 * 
+	 * @return description (std::string) 
+	 */
+	std::string getDescription() const {return description;}
 	/**
 	 * @brief Get the Neighbours object
 	 * 
@@ -212,6 +161,7 @@ public:
 		for (items::iterator iit = inventory.begin(); iit != inventory.end(); iit++) {
 			iit->reset();
 		}
+		std::cerr << "LOG: RoomID: " << roomID << " deleted" << std::endl;
 	}
 };
 
@@ -220,20 +170,36 @@ public:
  * 
  */
 class Object {
-	std::string objectName;
+	const std::string objectName;
+	const std::string objectDescriptor;
+	const int objID;
 public:
 	/**
 	 * @brief Construct a new Object object
 	 * 
 	 * @param n (std::string&) Name of the Object
+	 * @param d (std::string&): Description of the object
+	 * @param id (int): Creation ID of the item
 	 */
-	Object(const std::string& n) : objectName(n) {}
+	Object(const std::string& n, const int id, const std::string& d) : objectName(n), objID(id), objectDescriptor(d) {}
 	/**
 	 * @brief Get the Name object
 	 * 
 	 * @return objectName (std::string) 
 	 */
 	std::string getName() const {return objectName;}
+	/**
+	 * @brief Get the ID of the object
+	 * 
+	 * @return objID (int) 
+	 */
+	int getID() const {return objID;}
+	/**
+	 * @brief Get the Description of the object
+	 * 
+	 * @return objectDescription (std::string) 
+	 */
+	std::string getDescription() const {return objectDescriptor;}
 };
 
 /**
@@ -242,5 +208,30 @@ public:
  */
 class Key : public Object {
 	std::string keyID;
+};
+
+/**
+ * @brief The world that contains and manages all the rooms, entities. 
+ * A World object will able to parse the story file and initialize the game and run it.
+ * 
+ */
+class World {
+	nodes worldRooms;
+	entities population;
+	tinyxml2::XMLDocument story;
+public:
+	World(const char* path2story) {
+		story.LoadFile(path2story);
+	}
+	/**
+	 * @brief Create Room with initial params and add it to worldRooms.
+	 * 
+	 * @param name (const std::string&): Name of the Room
+	 * @param id (const std::string&): ID of the Room
+	 * @param desc (const std::string&): Description of the Room
+	 */
+	void RoomFactory(const std::string& name, int id, const std::string& desc) {
+		worldRooms.emplace_back(new Room(name, id, desc));
+	}
 };
 #endif

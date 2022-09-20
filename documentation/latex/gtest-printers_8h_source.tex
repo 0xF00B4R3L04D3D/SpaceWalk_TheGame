@@ -1,0 +1,1054 @@
+\hypertarget{gtest-printers_8h_source}{}\doxysection{gtest-\/printers.h}
+\label{gtest-printers_8h_source}\index{build/\_deps/googletest-\/src/googletest/include/gtest/gtest-\/printers.h@{build/\_deps/googletest-\/src/googletest/include/gtest/gtest-\/printers.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{comment}{// Copyright 2007, Google Inc.}}
+\DoxyCodeLine{2 \textcolor{comment}{// All rights reserved.}}
+\DoxyCodeLine{3 \textcolor{comment}{//}}
+\DoxyCodeLine{4 \textcolor{comment}{// Redistribution and use in source and binary forms, with or without}}
+\DoxyCodeLine{5 \textcolor{comment}{// modification, are permitted provided that the following conditions are}}
+\DoxyCodeLine{6 \textcolor{comment}{// met:}}
+\DoxyCodeLine{7 \textcolor{comment}{//}}
+\DoxyCodeLine{8 \textcolor{comment}{//     * Redistributions of source code must retain the above copyright}}
+\DoxyCodeLine{9 \textcolor{comment}{// notice, this list of conditions and the following disclaimer.}}
+\DoxyCodeLine{10 \textcolor{comment}{//     * Redistributions in binary form must reproduce the above}}
+\DoxyCodeLine{11 \textcolor{comment}{// copyright notice, this list of conditions and the following disclaimer}}
+\DoxyCodeLine{12 \textcolor{comment}{// in the documentation and/or other materials provided with the}}
+\DoxyCodeLine{13 \textcolor{comment}{// distribution.}}
+\DoxyCodeLine{14 \textcolor{comment}{//     * Neither the name of Google Inc. nor the names of its}}
+\DoxyCodeLine{15 \textcolor{comment}{// contributors may be used to endorse or promote products derived from}}
+\DoxyCodeLine{16 \textcolor{comment}{// this software without specific prior written permission.}}
+\DoxyCodeLine{17 \textcolor{comment}{//}}
+\DoxyCodeLine{18 \textcolor{comment}{// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS}}
+\DoxyCodeLine{19 \textcolor{comment}{// "{}AS IS"{} AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT}}
+\DoxyCodeLine{20 \textcolor{comment}{// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR}}
+\DoxyCodeLine{21 \textcolor{comment}{// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT}}
+\DoxyCodeLine{22 \textcolor{comment}{// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,}}
+\DoxyCodeLine{23 \textcolor{comment}{// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT}}
+\DoxyCodeLine{24 \textcolor{comment}{// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,}}
+\DoxyCodeLine{25 \textcolor{comment}{// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY}}
+\DoxyCodeLine{26 \textcolor{comment}{// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT}}
+\DoxyCodeLine{27 \textcolor{comment}{// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE}}
+\DoxyCodeLine{28 \textcolor{comment}{// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.}}
+\DoxyCodeLine{29 }
+\DoxyCodeLine{30 \textcolor{comment}{// Google Test -\/ The Google C++ Testing and Mocking Framework}}
+\DoxyCodeLine{31 \textcolor{comment}{//}}
+\DoxyCodeLine{32 \textcolor{comment}{// This file implements a universal value printer that can print a}}
+\DoxyCodeLine{33 \textcolor{comment}{// value of any type T:}}
+\DoxyCodeLine{34 \textcolor{comment}{//}}
+\DoxyCodeLine{35 \textcolor{comment}{//   void ::testing::internal::UniversalPrinter<T>::Print(value, ostream\_ptr);}}
+\DoxyCodeLine{36 \textcolor{comment}{//}}
+\DoxyCodeLine{37 \textcolor{comment}{// A user can teach this function how to print a class type T by}}
+\DoxyCodeLine{38 \textcolor{comment}{// defining either operator<<() or PrintTo() in the namespace that}}
+\DoxyCodeLine{39 \textcolor{comment}{// defines T.  More specifically, the FIRST defined function in the}}
+\DoxyCodeLine{40 \textcolor{comment}{// following list will be used (assuming T is defined in namespace}}
+\DoxyCodeLine{41 \textcolor{comment}{// foo):}}
+\DoxyCodeLine{42 \textcolor{comment}{//}}
+\DoxyCodeLine{43 \textcolor{comment}{//   1. foo::PrintTo(const T\&, ostream*)}}
+\DoxyCodeLine{44 \textcolor{comment}{//   2. operator<<(ostream\&, const T\&) defined in either foo or the}}
+\DoxyCodeLine{45 \textcolor{comment}{//      global namespace.}}
+\DoxyCodeLine{46 \textcolor{comment}{//}}
+\DoxyCodeLine{47 \textcolor{comment}{// However if T is an STL-\/style container then it is printed element-\/wise}}
+\DoxyCodeLine{48 \textcolor{comment}{// unless foo::PrintTo(const T\&, ostream*) is defined. Note that}}
+\DoxyCodeLine{49 \textcolor{comment}{// operator<<() is ignored for container types.}}
+\DoxyCodeLine{50 \textcolor{comment}{//}}
+\DoxyCodeLine{51 \textcolor{comment}{// If none of the above is defined, it will print the debug string of}}
+\DoxyCodeLine{52 \textcolor{comment}{// the value if it is a protocol buffer, or print the raw bytes in the}}
+\DoxyCodeLine{53 \textcolor{comment}{// value otherwise.}}
+\DoxyCodeLine{54 \textcolor{comment}{//}}
+\DoxyCodeLine{55 \textcolor{comment}{// To aid debugging: when T is a reference type, the address of the}}
+\DoxyCodeLine{56 \textcolor{comment}{// value is also printed; when T is a (const) char pointer, both the}}
+\DoxyCodeLine{57 \textcolor{comment}{// pointer value and the NUL-\/terminated string it points to are}}
+\DoxyCodeLine{58 \textcolor{comment}{// printed.}}
+\DoxyCodeLine{59 \textcolor{comment}{//}}
+\DoxyCodeLine{60 \textcolor{comment}{// We also provide some convenient wrappers:}}
+\DoxyCodeLine{61 \textcolor{comment}{//}}
+\DoxyCodeLine{62 \textcolor{comment}{//   // Prints a value to a string.  For a (const or not) char}}
+\DoxyCodeLine{63 \textcolor{comment}{//   // pointer, the NUL-\/terminated string (but not the pointer) is}}
+\DoxyCodeLine{64 \textcolor{comment}{//   // printed.}}
+\DoxyCodeLine{65 \textcolor{comment}{//   std::string ::testing::PrintToString(const T\& value);}}
+\DoxyCodeLine{66 \textcolor{comment}{//}}
+\DoxyCodeLine{67 \textcolor{comment}{//   // Prints a value tersely: for a reference type, the referenced}}
+\DoxyCodeLine{68 \textcolor{comment}{//   // value (but not the address) is printed; for a (const or not) char}}
+\DoxyCodeLine{69 \textcolor{comment}{//   // pointer, the NUL-\/terminated string (but not the pointer) is}}
+\DoxyCodeLine{70 \textcolor{comment}{//   // printed.}}
+\DoxyCodeLine{71 \textcolor{comment}{//   void ::testing::internal::UniversalTersePrint(const T\& value, ostream*);}}
+\DoxyCodeLine{72 \textcolor{comment}{//}}
+\DoxyCodeLine{73 \textcolor{comment}{//   // Prints value using the type inferred by the compiler.  The difference}}
+\DoxyCodeLine{74 \textcolor{comment}{//   // from UniversalTersePrint() is that this function prints both the}}
+\DoxyCodeLine{75 \textcolor{comment}{//   // pointer and the NUL-\/terminated string for a (const or not) char pointer.}}
+\DoxyCodeLine{76 \textcolor{comment}{//   void ::testing::internal::UniversalPrint(const T\& value, ostream*);}}
+\DoxyCodeLine{77 \textcolor{comment}{//}}
+\DoxyCodeLine{78 \textcolor{comment}{//   // Prints the fields of a tuple tersely to a string vector, one}}
+\DoxyCodeLine{79 \textcolor{comment}{//   // element for each field. Tuple support must be enabled in}}
+\DoxyCodeLine{80 \textcolor{comment}{//   // gtest-\/port.h.}}
+\DoxyCodeLine{81 \textcolor{comment}{//   std::vector<string> UniversalTersePrintTupleFieldsToStrings(}}
+\DoxyCodeLine{82 \textcolor{comment}{//       const Tuple\& value);}}
+\DoxyCodeLine{83 \textcolor{comment}{//}}
+\DoxyCodeLine{84 \textcolor{comment}{// Known limitation:}}
+\DoxyCodeLine{85 \textcolor{comment}{//}}
+\DoxyCodeLine{86 \textcolor{comment}{// The print primitives print the elements of an STL-\/style container}}
+\DoxyCodeLine{87 \textcolor{comment}{// using the compiler-\/inferred type of *iter where iter is a}}
+\DoxyCodeLine{88 \textcolor{comment}{// const\_iterator of the container.  When const\_iterator is an input}}
+\DoxyCodeLine{89 \textcolor{comment}{// iterator but not a forward iterator, this inferred type may not}}
+\DoxyCodeLine{90 \textcolor{comment}{// match value\_type, and the print output may be incorrect.  In}}
+\DoxyCodeLine{91 \textcolor{comment}{// practice, this is rarely a problem as for most containers}}
+\DoxyCodeLine{92 \textcolor{comment}{// const\_iterator is a forward iterator.  We'll fix this if there's an}}
+\DoxyCodeLine{93 \textcolor{comment}{// actual need for it.  Note that this fix cannot rely on value\_type}}
+\DoxyCodeLine{94 \textcolor{comment}{// being defined as many user-\/defined container types don't have}}
+\DoxyCodeLine{95 \textcolor{comment}{// value\_type.}}
+\DoxyCodeLine{96 }
+\DoxyCodeLine{97 \textcolor{comment}{// IWYU pragma: private, include "{}gtest/gtest.h"{}}}
+\DoxyCodeLine{98 \textcolor{comment}{// IWYU pragma: friend gtest/.*}}
+\DoxyCodeLine{99 \textcolor{comment}{// IWYU pragma: friend gmock/.*}}
+\DoxyCodeLine{100 }
+\DoxyCodeLine{101 \textcolor{preprocessor}{\#ifndef GOOGLETEST\_INCLUDE\_GTEST\_GTEST\_PRINTERS\_H\_}}
+\DoxyCodeLine{102 \textcolor{preprocessor}{\#define GOOGLETEST\_INCLUDE\_GTEST\_GTEST\_PRINTERS\_H\_}}
+\DoxyCodeLine{103 }
+\DoxyCodeLine{104 \textcolor{preprocessor}{\#include <functional>}}
+\DoxyCodeLine{105 \textcolor{preprocessor}{\#include <memory>}}
+\DoxyCodeLine{106 \textcolor{preprocessor}{\#include <ostream>}  \textcolor{comment}{// NOLINT}}
+\DoxyCodeLine{107 \textcolor{preprocessor}{\#include <sstream>}}
+\DoxyCodeLine{108 \textcolor{preprocessor}{\#include <string>}}
+\DoxyCodeLine{109 \textcolor{preprocessor}{\#include <tuple>}}
+\DoxyCodeLine{110 \textcolor{preprocessor}{\#include <type\_traits>}}
+\DoxyCodeLine{111 \textcolor{preprocessor}{\#include <utility>}}
+\DoxyCodeLine{112 \textcolor{preprocessor}{\#include <vector>}}
+\DoxyCodeLine{113 }
+\DoxyCodeLine{114 \textcolor{preprocessor}{\#include "{}gtest/internal/gtest-\/internal.h"{}}}
+\DoxyCodeLine{115 \textcolor{preprocessor}{\#include "{}gtest/internal/gtest-\/port.h"{}}}
+\DoxyCodeLine{116 }
+\DoxyCodeLine{117 \textcolor{keyword}{namespace }testing \{}
+\DoxyCodeLine{118 }
+\DoxyCodeLine{119 \textcolor{comment}{// Definitions in the internal* namespaces are subject to change without notice.}}
+\DoxyCodeLine{120 \textcolor{comment}{// DO NOT USE THEM IN USER CODE!}}
+\DoxyCodeLine{121 \textcolor{keyword}{namespace }internal \{}
+\DoxyCodeLine{122 }
+\DoxyCodeLine{123 \textcolor{keyword}{template} <\textcolor{keyword}{typename} T>}
+\DoxyCodeLine{124 \textcolor{keywordtype}{void} UniversalPrint(\textcolor{keyword}{const} T\& value, ::std::ostream* os);}
+\DoxyCodeLine{125 }
+\DoxyCodeLine{126 \textcolor{comment}{// Used to print an STL-\/style container when the user doesn't define}}
+\DoxyCodeLine{127 \textcolor{comment}{// a PrintTo() for it.}}
+\DoxyCodeLine{128 \textcolor{keyword}{struct }\mbox{\hyperlink{structtesting_1_1internal_1_1ContainerPrinter}{ContainerPrinter}} \{}
+\DoxyCodeLine{129   \textcolor{keyword}{template} <\textcolor{keyword}{typename} T,}
+\DoxyCodeLine{130             \textcolor{keyword}{typename} = \textcolor{keyword}{typename} std::enable\_if<}
+\DoxyCodeLine{131                 (\textcolor{keyword}{sizeof}(IsContainerTest<T>(0)) == \textcolor{keyword}{sizeof}(IsContainer)) \&\&}
+\DoxyCodeLine{132                 !\mbox{\hyperlink{structtesting_1_1internal_1_1IsRecursiveContainer}{IsRecursiveContainer<T>::value}}>::type>}
+\DoxyCodeLine{133   \textcolor{keyword}{static} \textcolor{keywordtype}{void} PrintValue(\textcolor{keyword}{const} T\& container, std::ostream* os) \{}
+\DoxyCodeLine{134     \textcolor{keyword}{const} \textcolor{keywordtype}{size\_t} kMaxCount = 32;  \textcolor{comment}{// The maximum number of elements to print.}}
+\DoxyCodeLine{135     *os << \textcolor{charliteral}{'\{'};}
+\DoxyCodeLine{136     \textcolor{keywordtype}{size\_t} count = 0;}
+\DoxyCodeLine{137     \textcolor{keywordflow}{for} (\textcolor{keyword}{auto}\&\& elem : container) \{}
+\DoxyCodeLine{138       \textcolor{keywordflow}{if} (count > 0) \{}
+\DoxyCodeLine{139         *os << \textcolor{charliteral}{','};}
+\DoxyCodeLine{140         \textcolor{keywordflow}{if} (count == kMaxCount) \{  \textcolor{comment}{// Enough has been printed.}}
+\DoxyCodeLine{141           *os << \textcolor{stringliteral}{"{} ..."{}};}
+\DoxyCodeLine{142           \textcolor{keywordflow}{break};}
+\DoxyCodeLine{143         \}}
+\DoxyCodeLine{144       \}}
+\DoxyCodeLine{145       *os << \textcolor{charliteral}{' '};}
+\DoxyCodeLine{146       \textcolor{comment}{// We cannot call PrintTo(elem, os) here as PrintTo() doesn't}}
+\DoxyCodeLine{147       \textcolor{comment}{// handle `elem` being a native array.}}
+\DoxyCodeLine{148       internal::UniversalPrint(elem, os);}
+\DoxyCodeLine{149       ++count;}
+\DoxyCodeLine{150     \}}
+\DoxyCodeLine{151 }
+\DoxyCodeLine{152     \textcolor{keywordflow}{if} (count > 0) \{}
+\DoxyCodeLine{153       *os << \textcolor{charliteral}{' '};}
+\DoxyCodeLine{154     \}}
+\DoxyCodeLine{155     *os << \textcolor{charliteral}{'\}'};}
+\DoxyCodeLine{156   \}}
+\DoxyCodeLine{157 \};}
+\DoxyCodeLine{158 }
+\DoxyCodeLine{159 \textcolor{comment}{// Used to print a pointer that is neither a char pointer nor a member}}
+\DoxyCodeLine{160 \textcolor{comment}{// pointer, when the user doesn't define PrintTo() for it.  (A member}}
+\DoxyCodeLine{161 \textcolor{comment}{// variable pointer or member function pointer doesn't really point to}}
+\DoxyCodeLine{162 \textcolor{comment}{// a location in the address space.  Their representation is}}
+\DoxyCodeLine{163 \textcolor{comment}{// implementation-\/defined.  Therefore they will be printed as raw}}
+\DoxyCodeLine{164 \textcolor{comment}{// bytes.)}}
+\DoxyCodeLine{165 \textcolor{keyword}{struct }\mbox{\hyperlink{structtesting_1_1internal_1_1FunctionPointerPrinter}{FunctionPointerPrinter}} \{}
+\DoxyCodeLine{166   \textcolor{keyword}{template} <\textcolor{keyword}{typename} T, \textcolor{keyword}{typename} = \textcolor{keyword}{typename} std::enable\_if<}
+\DoxyCodeLine{167                             std::is\_function<T>::value>::type>}
+\DoxyCodeLine{168   \textcolor{keyword}{static} \textcolor{keywordtype}{void} PrintValue(T* p, ::std::ostream* os) \{}
+\DoxyCodeLine{169     \textcolor{keywordflow}{if} (p == \textcolor{keyword}{nullptr}) \{}
+\DoxyCodeLine{170       *os << \textcolor{stringliteral}{"{}NULL"{}};}
+\DoxyCodeLine{171     \} \textcolor{keywordflow}{else} \{}
+\DoxyCodeLine{172       \textcolor{comment}{// T is a function type, so '*os << p' doesn't do what we want}}
+\DoxyCodeLine{173       \textcolor{comment}{// (it just prints p as bool).  We want to print p as a const}}
+\DoxyCodeLine{174       \textcolor{comment}{// void*.}}
+\DoxyCodeLine{175       *os << reinterpret\_cast<const void*>(p);}
+\DoxyCodeLine{176     \}}
+\DoxyCodeLine{177   \}}
+\DoxyCodeLine{178 \};}
+\DoxyCodeLine{179 }
+\DoxyCodeLine{180 \textcolor{keyword}{struct }\mbox{\hyperlink{structtesting_1_1internal_1_1PointerPrinter}{PointerPrinter}} \{}
+\DoxyCodeLine{181   \textcolor{keyword}{template} <\textcolor{keyword}{typename} T>}
+\DoxyCodeLine{182   \textcolor{keyword}{static} \textcolor{keywordtype}{void} PrintValue(T* p, ::std::ostream* os) \{}
+\DoxyCodeLine{183     \textcolor{keywordflow}{if} (p == \textcolor{keyword}{nullptr}) \{}
+\DoxyCodeLine{184       *os << \textcolor{stringliteral}{"{}NULL"{}};}
+\DoxyCodeLine{185     \} \textcolor{keywordflow}{else} \{}
+\DoxyCodeLine{186       \textcolor{comment}{// T is not a function type.  We just call << to print p,}}
+\DoxyCodeLine{187       \textcolor{comment}{// relying on ADL to pick up user-\/defined << for their pointer}}
+\DoxyCodeLine{188       \textcolor{comment}{// types, if any.}}
+\DoxyCodeLine{189       *os << p;}
+\DoxyCodeLine{190     \}}
+\DoxyCodeLine{191   \}}
+\DoxyCodeLine{192 \};}
+\DoxyCodeLine{193 }
+\DoxyCodeLine{194 \textcolor{keyword}{namespace }internal\_stream\_operator\_without\_lexical\_name\_lookup \{}
+\DoxyCodeLine{195 }
+\DoxyCodeLine{196 \textcolor{comment}{// The presence of an operator<< here will terminate lexical scope lookup}}
+\DoxyCodeLine{197 \textcolor{comment}{// straight away (even though it cannot be a match because of its argument}}
+\DoxyCodeLine{198 \textcolor{comment}{// types). Thus, the two operator<< calls in StreamPrinter will find only ADL}}
+\DoxyCodeLine{199 \textcolor{comment}{// candidates.}}
+\DoxyCodeLine{200 \textcolor{keyword}{struct }\mbox{\hyperlink{structtesting_1_1internal_1_1internal__stream__operator__without__lexical__name__lookup_1_1LookupBlocker}{LookupBlocker}} \{\};}
+\DoxyCodeLine{201 \textcolor{keywordtype}{void} operator<<(\mbox{\hyperlink{structtesting_1_1internal_1_1internal__stream__operator__without__lexical__name__lookup_1_1LookupBlocker}{LookupBlocker}}, \mbox{\hyperlink{structtesting_1_1internal_1_1internal__stream__operator__without__lexical__name__lookup_1_1LookupBlocker}{LookupBlocker}});}
+\DoxyCodeLine{202 }
+\DoxyCodeLine{203 \textcolor{keyword}{struct }\mbox{\hyperlink{structtesting_1_1internal_1_1internal__stream__operator__without__lexical__name__lookup_1_1StreamPrinter}{StreamPrinter}} \{}
+\DoxyCodeLine{204   \textcolor{keyword}{template} <\textcolor{keyword}{typename} T,}
+\DoxyCodeLine{205             \textcolor{comment}{// Don't accept member pointers here. We'd print them via implicit}}
+\DoxyCodeLine{206             \textcolor{comment}{// conversion to bool, which isn't useful.}}
+\DoxyCodeLine{207             \textcolor{keyword}{typename} = \textcolor{keyword}{typename} std::enable\_if<}
+\DoxyCodeLine{208                 !std::is\_member\_pointer<T>::value>::type,}
+\DoxyCodeLine{209             \textcolor{comment}{// Only accept types for which we can find a streaming operator via}}
+\DoxyCodeLine{210             \textcolor{comment}{// ADL (possibly involving implicit conversions).}}
+\DoxyCodeLine{211             \textcolor{keyword}{typename} = \textcolor{keyword}{decltype}(std::declval<std::ostream\&>()}
+\DoxyCodeLine{212                                 << std::declval<const T\&>())>}
+\DoxyCodeLine{213   \textcolor{keyword}{static} \textcolor{keywordtype}{void} PrintValue(\textcolor{keyword}{const} T\& value, ::std::ostream* os) \{}
+\DoxyCodeLine{214     \textcolor{comment}{// Call streaming operator found by ADL, possibly with implicit conversions}}
+\DoxyCodeLine{215     \textcolor{comment}{// of the arguments.}}
+\DoxyCodeLine{216     *os << value;}
+\DoxyCodeLine{217   \}}
+\DoxyCodeLine{218 \};}
+\DoxyCodeLine{219 }
+\DoxyCodeLine{220 \}  \textcolor{comment}{// namespace internal\_stream\_operator\_without\_lexical\_name\_lookup}}
+\DoxyCodeLine{221 }
+\DoxyCodeLine{222 \textcolor{keyword}{struct }\mbox{\hyperlink{structtesting_1_1internal_1_1ProtobufPrinter}{ProtobufPrinter}} \{}
+\DoxyCodeLine{223   \textcolor{comment}{// We print a protobuf using its ShortDebugString() when the string}}
+\DoxyCodeLine{224   \textcolor{comment}{// doesn't exceed this many characters; otherwise we print it using}}
+\DoxyCodeLine{225   \textcolor{comment}{// DebugString() for better readability.}}
+\DoxyCodeLine{226   \textcolor{keyword}{static} \textcolor{keyword}{const} \textcolor{keywordtype}{size\_t} kProtobufOneLinerMaxLength = 50;}
+\DoxyCodeLine{227 }
+\DoxyCodeLine{228   \textcolor{keyword}{template} <\textcolor{keyword}{typename} T,}
+\DoxyCodeLine{229             \textcolor{keyword}{typename} = \textcolor{keyword}{typename} std::enable\_if<}
+\DoxyCodeLine{230                 \mbox{\hyperlink{classtesting_1_1internal_1_1HasDebugStringAndShortDebugString}{internal::HasDebugStringAndShortDebugString<T>::value}}>::type>}
+\DoxyCodeLine{231   \textcolor{keyword}{static} \textcolor{keywordtype}{void} PrintValue(\textcolor{keyword}{const} T\& value, ::std::ostream* os) \{}
+\DoxyCodeLine{232     std::string pretty\_str = value.ShortDebugString();}
+\DoxyCodeLine{233     \textcolor{keywordflow}{if} (pretty\_str.length() > kProtobufOneLinerMaxLength) \{}
+\DoxyCodeLine{234       pretty\_str = \textcolor{stringliteral}{"{}\(\backslash\)n"{}} + value.DebugString();}
+\DoxyCodeLine{235     \}}
+\DoxyCodeLine{236     *os << (\textcolor{stringliteral}{"{}<"{}} + pretty\_str + \textcolor{stringliteral}{"{}>"{}});}
+\DoxyCodeLine{237   \}}
+\DoxyCodeLine{238 \};}
+\DoxyCodeLine{239 }
+\DoxyCodeLine{240 \textcolor{keyword}{struct }\mbox{\hyperlink{structtesting_1_1internal_1_1ConvertibleToIntegerPrinter}{ConvertibleToIntegerPrinter}} \{}
+\DoxyCodeLine{241   \textcolor{comment}{// Since T has no << operator or PrintTo() but can be implicitly}}
+\DoxyCodeLine{242   \textcolor{comment}{// converted to BiggestInt, we print it as a BiggestInt.}}
+\DoxyCodeLine{243   \textcolor{comment}{//}}
+\DoxyCodeLine{244   \textcolor{comment}{// Most likely T is an enum type (either named or unnamed), in which}}
+\DoxyCodeLine{245   \textcolor{comment}{// case printing it as an integer is the desired behavior.  In case}}
+\DoxyCodeLine{246   \textcolor{comment}{// T is not an enum, printing it as an integer is the best we can do}}
+\DoxyCodeLine{247   \textcolor{comment}{// given that it has no user-\/defined printer.}}
+\DoxyCodeLine{248   \textcolor{keyword}{static} \textcolor{keywordtype}{void} PrintValue(internal::BiggestInt value, ::std::ostream* os) \{}
+\DoxyCodeLine{249     *os << value;}
+\DoxyCodeLine{250   \}}
+\DoxyCodeLine{251 \};}
+\DoxyCodeLine{252 }
+\DoxyCodeLine{253 \textcolor{keyword}{struct }\mbox{\hyperlink{structtesting_1_1internal_1_1ConvertibleToStringViewPrinter}{ConvertibleToStringViewPrinter}} \{}
+\DoxyCodeLine{254 \textcolor{preprocessor}{\#if GTEST\_INTERNAL\_HAS\_STRING\_VIEW}}
+\DoxyCodeLine{255   \textcolor{keyword}{static} \textcolor{keywordtype}{void} PrintValue(internal::StringView value, ::std::ostream* os) \{}
+\DoxyCodeLine{256     internal::UniversalPrint(value, os);}
+\DoxyCodeLine{257   \}}
+\DoxyCodeLine{258 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{259 \};}
+\DoxyCodeLine{260 }
+\DoxyCodeLine{261 \textcolor{comment}{// Prints the given number of bytes in the given object to the given}}
+\DoxyCodeLine{262 \textcolor{comment}{// ostream.}}
+\DoxyCodeLine{263 GTEST\_API\_ \textcolor{keywordtype}{void} PrintBytesInObjectTo(\textcolor{keyword}{const} \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{char}* obj\_bytes,}
+\DoxyCodeLine{264                                      \textcolor{keywordtype}{size\_t} count, ::std::ostream* os);}
+\DoxyCodeLine{265 \textcolor{keyword}{struct }\mbox{\hyperlink{structtesting_1_1internal_1_1RawBytesPrinter}{RawBytesPrinter}} \{}
+\DoxyCodeLine{266   \textcolor{comment}{// SFINAE on `sizeof` to make sure we have a complete type.}}
+\DoxyCodeLine{267   \textcolor{keyword}{template} <\textcolor{keyword}{typename} T, \textcolor{keywordtype}{size\_t} = sizeof(T)>}
+\DoxyCodeLine{268   \textcolor{keyword}{static} \textcolor{keywordtype}{void} PrintValue(\textcolor{keyword}{const} T\& value, ::std::ostream* os) \{}
+\DoxyCodeLine{269     PrintBytesInObjectTo(}
+\DoxyCodeLine{270         \textcolor{keyword}{static\_cast<}\textcolor{keyword}{const }\textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{char}*\textcolor{keyword}{>}(}
+\DoxyCodeLine{271             \textcolor{comment}{// Load bearing cast to void* to support iOS}}
+\DoxyCodeLine{272             \textcolor{keyword}{reinterpret\_cast<}\textcolor{keyword}{const }\textcolor{keywordtype}{void}*\textcolor{keyword}{>}(std::addressof(value))),}
+\DoxyCodeLine{273         \textcolor{keyword}{sizeof}(value), os);}
+\DoxyCodeLine{274   \}}
+\DoxyCodeLine{275 \};}
+\DoxyCodeLine{276 }
+\DoxyCodeLine{277 \textcolor{keyword}{struct }\mbox{\hyperlink{structtesting_1_1internal_1_1FallbackPrinter}{FallbackPrinter}} \{}
+\DoxyCodeLine{278   \textcolor{keyword}{template} <\textcolor{keyword}{typename} T>}
+\DoxyCodeLine{279   \textcolor{keyword}{static} \textcolor{keywordtype}{void} PrintValue(\textcolor{keyword}{const} T\&, ::std::ostream* os) \{}
+\DoxyCodeLine{280     *os << \textcolor{stringliteral}{"{}(incomplete type)"{}};}
+\DoxyCodeLine{281   \}}
+\DoxyCodeLine{282 \};}
+\DoxyCodeLine{283 }
+\DoxyCodeLine{284 \textcolor{comment}{// Try every printer in order and return the first one that works.}}
+\DoxyCodeLine{285 \textcolor{keyword}{template} <\textcolor{keyword}{typename} T, \textcolor{keyword}{typename} E, \textcolor{keyword}{typename} Printer, \textcolor{keyword}{typename}... Printers>}
+\DoxyCodeLine{286 \textcolor{keyword}{struct }\mbox{\hyperlink{structtesting_1_1internal_1_1FindFirstPrinter}{FindFirstPrinter}} : \mbox{\hyperlink{structtesting_1_1internal_1_1FindFirstPrinter}{FindFirstPrinter}}<T, E, Printers...> \{\};}
+\DoxyCodeLine{287 }
+\DoxyCodeLine{288 \textcolor{keyword}{template} <\textcolor{keyword}{typename} T, \textcolor{keyword}{typename} Printer, \textcolor{keyword}{typename}... Printers>}
+\DoxyCodeLine{289 \textcolor{keyword}{struct }\mbox{\hyperlink{structtesting_1_1internal_1_1FindFirstPrinter}{FindFirstPrinter}}<}
+\DoxyCodeLine{290     T, decltype(Printer::PrintValue(std::declval<const T\&>(), nullptr)),}
+\DoxyCodeLine{291     Printer, Printers...> \{}
+\DoxyCodeLine{292   \textcolor{keyword}{using }type = Printer;}
+\DoxyCodeLine{293 \};}
+\DoxyCodeLine{294 }
+\DoxyCodeLine{295 \textcolor{comment}{// Select the best printer in the following order:}}
+\DoxyCodeLine{296 \textcolor{comment}{//  -\/ Print containers (they have begin/end/etc).}}
+\DoxyCodeLine{297 \textcolor{comment}{//  -\/ Print function pointers.}}
+\DoxyCodeLine{298 \textcolor{comment}{//  -\/ Print object pointers.}}
+\DoxyCodeLine{299 \textcolor{comment}{//  -\/ Use the stream operator, if available.}}
+\DoxyCodeLine{300 \textcolor{comment}{//  -\/ Print protocol buffers.}}
+\DoxyCodeLine{301 \textcolor{comment}{//  -\/ Print types convertible to BiggestInt.}}
+\DoxyCodeLine{302 \textcolor{comment}{//  -\/ Print types convertible to StringView, if available.}}
+\DoxyCodeLine{303 \textcolor{comment}{//  -\/ Fallback to printing the raw bytes of the object.}}
+\DoxyCodeLine{304 \textcolor{keyword}{template} <\textcolor{keyword}{typename} T>}
+\DoxyCodeLine{305 \textcolor{keywordtype}{void} PrintWithFallback(\textcolor{keyword}{const} T\& value, ::std::ostream* os) \{}
+\DoxyCodeLine{306   \textcolor{keyword}{using }Printer = \textcolor{keyword}{typename} \mbox{\hyperlink{structtesting_1_1internal_1_1FindFirstPrinter}{FindFirstPrinter}}<}
+\DoxyCodeLine{307       T, void, \mbox{\hyperlink{structtesting_1_1internal_1_1ContainerPrinter}{ContainerPrinter}}, \mbox{\hyperlink{structtesting_1_1internal_1_1FunctionPointerPrinter}{FunctionPointerPrinter}}, \mbox{\hyperlink{structtesting_1_1internal_1_1PointerPrinter}{PointerPrinter}},}
+\DoxyCodeLine{308       \mbox{\hyperlink{structtesting_1_1internal_1_1internal__stream__operator__without__lexical__name__lookup_1_1StreamPrinter}{internal\_stream\_operator\_without\_lexical\_name\_lookup::StreamPrinter}},}
+\DoxyCodeLine{309       \mbox{\hyperlink{structtesting_1_1internal_1_1ProtobufPrinter}{ProtobufPrinter}}, \mbox{\hyperlink{structtesting_1_1internal_1_1ConvertibleToIntegerPrinter}{ConvertibleToIntegerPrinter}},}
+\DoxyCodeLine{310       \mbox{\hyperlink{structtesting_1_1internal_1_1ConvertibleToStringViewPrinter}{ConvertibleToStringViewPrinter}}, \mbox{\hyperlink{structtesting_1_1internal_1_1RawBytesPrinter}{RawBytesPrinter}}, \mbox{\hyperlink{structtesting_1_1internal_1_1FallbackPrinter}{FallbackPrinter}}>::type;}
+\DoxyCodeLine{311   Printer::PrintValue(value, os);}
+\DoxyCodeLine{312 \}}
+\DoxyCodeLine{313 }
+\DoxyCodeLine{314 \textcolor{comment}{// FormatForComparison<ToPrint, OtherOperand>::Format(value) formats a}}
+\DoxyCodeLine{315 \textcolor{comment}{// value of type ToPrint that is an operand of a comparison assertion}}
+\DoxyCodeLine{316 \textcolor{comment}{// (e.g. ASSERT\_EQ).  OtherOperand is the type of the other operand in}}
+\DoxyCodeLine{317 \textcolor{comment}{// the comparison, and is used to help determine the best way to}}
+\DoxyCodeLine{318 \textcolor{comment}{// format the value.  In particular, when the value is a C string}}
+\DoxyCodeLine{319 \textcolor{comment}{// (char pointer) and the other operand is an STL string object, we}}
+\DoxyCodeLine{320 \textcolor{comment}{// want to format the C string as a string, since we know it is}}
+\DoxyCodeLine{321 \textcolor{comment}{// compared by value with the string object.  If the value is a char}}
+\DoxyCodeLine{322 \textcolor{comment}{// pointer but the other operand is not an STL string object, we don't}}
+\DoxyCodeLine{323 \textcolor{comment}{// know whether the pointer is supposed to point to a NUL-\/terminated}}
+\DoxyCodeLine{324 \textcolor{comment}{// string, and thus want to print it as a pointer to be safe.}}
+\DoxyCodeLine{325 \textcolor{comment}{//}}
+\DoxyCodeLine{326 \textcolor{comment}{// INTERNAL IMPLEMENTATION -\/ DO NOT USE IN A USER PROGRAM.}}
+\DoxyCodeLine{327 }
+\DoxyCodeLine{328 \textcolor{comment}{// The default case.}}
+\DoxyCodeLine{329 \textcolor{keyword}{template} <\textcolor{keyword}{typename} ToPr\textcolor{keywordtype}{int}, \textcolor{keyword}{typename} OtherOperand>}
+\DoxyCodeLine{330 \textcolor{keyword}{class }\mbox{\hyperlink{classtesting_1_1internal_1_1FormatForComparison}{FormatForComparison}} \{}
+\DoxyCodeLine{331  \textcolor{keyword}{public}:}
+\DoxyCodeLine{332   static ::std::string Format(\textcolor{keyword}{const} ToPrint\& value) \{}
+\DoxyCodeLine{333     return ::testing::PrintToString(value);}
+\DoxyCodeLine{334   \}}
+\DoxyCodeLine{335 \};}
+\DoxyCodeLine{336 }
+\DoxyCodeLine{337 \textcolor{comment}{// Array.}}
+\DoxyCodeLine{338 \textcolor{keyword}{template} <\textcolor{keyword}{typename} ToPr\textcolor{keywordtype}{int}, \textcolor{keywordtype}{size\_t} N, \textcolor{keyword}{typename} OtherOperand>}
+\DoxyCodeLine{339 \textcolor{keyword}{class }\mbox{\hyperlink{classtesting_1_1internal_1_1FormatForComparison}{FormatForComparison}}<ToPrint[N], OtherOperand> \{}
+\DoxyCodeLine{340  \textcolor{keyword}{public}:}
+\DoxyCodeLine{341   static ::std::string Format(\textcolor{keyword}{const} ToPrint* value) \{}
+\DoxyCodeLine{342     \textcolor{keywordflow}{return} \mbox{\hyperlink{classtesting_1_1internal_1_1FormatForComparison}{FormatForComparison<const ToPrint*, OtherOperand>::Format}}(value);}
+\DoxyCodeLine{343   \}}
+\DoxyCodeLine{344 \};}
+\DoxyCodeLine{345 }
+\DoxyCodeLine{346 \textcolor{comment}{// By default, print C string as pointers to be safe, as we don't know}}
+\DoxyCodeLine{347 \textcolor{comment}{// whether they actually point to a NUL-\/terminated string.}}
+\DoxyCodeLine{348 }
+\DoxyCodeLine{349 \textcolor{preprocessor}{\#define GTEST\_IMPL\_FORMAT\_C\_STRING\_AS\_POINTER\_(CharType)                \(\backslash\)}}
+\DoxyCodeLine{350 \textcolor{preprocessor}{  template <typename OtherOperand>                                      \(\backslash\)}}
+\DoxyCodeLine{351 \textcolor{preprocessor}{  class FormatForComparison<CharType*, OtherOperand> \{                  \(\backslash\)}}
+\DoxyCodeLine{352 \textcolor{preprocessor}{   public:                                                              \(\backslash\)}}
+\DoxyCodeLine{353 \textcolor{preprocessor}{    static ::std::string Format(CharType* value) \{                      \(\backslash\)}}
+\DoxyCodeLine{354 \textcolor{preprocessor}{      return ::testing::PrintToString(static\_cast<const void*>(value)); \(\backslash\)}}
+\DoxyCodeLine{355 \textcolor{preprocessor}{    \}                                                                   \(\backslash\)}}
+\DoxyCodeLine{356 \textcolor{preprocessor}{  \}}}
+\DoxyCodeLine{357 }
+\DoxyCodeLine{358 GTEST\_IMPL\_FORMAT\_C\_STRING\_AS\_POINTER\_(\textcolor{keywordtype}{char});}
+\DoxyCodeLine{359 GTEST\_IMPL\_FORMAT\_C\_STRING\_AS\_POINTER\_(\textcolor{keyword}{const} \textcolor{keywordtype}{char});}
+\DoxyCodeLine{360 GTEST\_IMPL\_FORMAT\_C\_STRING\_AS\_POINTER\_(\textcolor{keywordtype}{wchar\_t});}
+\DoxyCodeLine{361 GTEST\_IMPL\_FORMAT\_C\_STRING\_AS\_POINTER\_(\textcolor{keyword}{const} \textcolor{keywordtype}{wchar\_t});}
+\DoxyCodeLine{362 \textcolor{preprocessor}{\#ifdef \_\_cpp\_lib\_char8\_t}}
+\DoxyCodeLine{363 GTEST\_IMPL\_FORMAT\_C\_STRING\_AS\_POINTER\_(\textcolor{keywordtype}{char8\_t});}
+\DoxyCodeLine{364 GTEST\_IMPL\_FORMAT\_C\_STRING\_AS\_POINTER\_(\textcolor{keyword}{const} \textcolor{keywordtype}{char8\_t});}
+\DoxyCodeLine{365 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{366 GTEST\_IMPL\_FORMAT\_C\_STRING\_AS\_POINTER\_(\textcolor{keywordtype}{char16\_t});}
+\DoxyCodeLine{367 GTEST\_IMPL\_FORMAT\_C\_STRING\_AS\_POINTER\_(\textcolor{keyword}{const} \textcolor{keywordtype}{char16\_t});}
+\DoxyCodeLine{368 GTEST\_IMPL\_FORMAT\_C\_STRING\_AS\_POINTER\_(\textcolor{keywordtype}{char32\_t});}
+\DoxyCodeLine{369 GTEST\_IMPL\_FORMAT\_C\_STRING\_AS\_POINTER\_(\textcolor{keyword}{const} \textcolor{keywordtype}{char32\_t});}
+\DoxyCodeLine{370 }
+\DoxyCodeLine{371 \textcolor{preprocessor}{\#undef GTEST\_IMPL\_FORMAT\_C\_STRING\_AS\_POINTER\_}}
+\DoxyCodeLine{372 }
+\DoxyCodeLine{373 \textcolor{comment}{// If a C string is compared with an STL string object, we know it's meant}}
+\DoxyCodeLine{374 \textcolor{comment}{// to point to a NUL-\/terminated string, and thus can print it as a string.}}
+\DoxyCodeLine{375 }
+\DoxyCodeLine{376 \textcolor{preprocessor}{\#define GTEST\_IMPL\_FORMAT\_C\_STRING\_AS\_STRING\_(CharType, OtherStringType) \(\backslash\)}}
+\DoxyCodeLine{377 \textcolor{preprocessor}{  template <>                                                            \(\backslash\)}}
+\DoxyCodeLine{378 \textcolor{preprocessor}{  class FormatForComparison<CharType*, OtherStringType> \{                \(\backslash\)}}
+\DoxyCodeLine{379 \textcolor{preprocessor}{   public:                                                               \(\backslash\)}}
+\DoxyCodeLine{380 \textcolor{preprocessor}{    static ::std::string Format(CharType* value) \{                       \(\backslash\)}}
+\DoxyCodeLine{381 \textcolor{preprocessor}{      return ::testing::PrintToString(value);                            \(\backslash\)}}
+\DoxyCodeLine{382 \textcolor{preprocessor}{    \}                                                                    \(\backslash\)}}
+\DoxyCodeLine{383 \textcolor{preprocessor}{  \}}}
+\DoxyCodeLine{384 }
+\DoxyCodeLine{385 GTEST\_IMPL\_FORMAT\_C\_STRING\_AS\_STRING\_(\textcolor{keywordtype}{char}, ::std::string);}
+\DoxyCodeLine{386 GTEST\_IMPL\_FORMAT\_C\_STRING\_AS\_STRING\_(\textcolor{keyword}{const} \textcolor{keywordtype}{char}, ::std::string);}
+\DoxyCodeLine{387 \textcolor{preprocessor}{\#ifdef \_\_cpp\_char8\_t}}
+\DoxyCodeLine{388 GTEST\_IMPL\_FORMAT\_C\_STRING\_AS\_STRING\_(\textcolor{keywordtype}{char8\_t}, ::std::u8string);}
+\DoxyCodeLine{389 GTEST\_IMPL\_FORMAT\_C\_STRING\_AS\_STRING\_(\textcolor{keyword}{const} \textcolor{keywordtype}{char8\_t}, ::std::u8string);}
+\DoxyCodeLine{390 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{391 GTEST\_IMPL\_FORMAT\_C\_STRING\_AS\_STRING\_(\textcolor{keywordtype}{char16\_t}, ::std::u16string);}
+\DoxyCodeLine{392 GTEST\_IMPL\_FORMAT\_C\_STRING\_AS\_STRING\_(\textcolor{keyword}{const} \textcolor{keywordtype}{char16\_t}, ::std::u16string);}
+\DoxyCodeLine{393 GTEST\_IMPL\_FORMAT\_C\_STRING\_AS\_STRING\_(\textcolor{keywordtype}{char32\_t}, ::std::u32string);}
+\DoxyCodeLine{394 GTEST\_IMPL\_FORMAT\_C\_STRING\_AS\_STRING\_(\textcolor{keyword}{const} \textcolor{keywordtype}{char32\_t}, ::std::u32string);}
+\DoxyCodeLine{395 }
+\DoxyCodeLine{396 \textcolor{preprocessor}{\#if GTEST\_HAS\_STD\_WSTRING}}
+\DoxyCodeLine{397 GTEST\_IMPL\_FORMAT\_C\_STRING\_AS\_STRING\_(\textcolor{keywordtype}{wchar\_t}, ::std::wstring);}
+\DoxyCodeLine{398 GTEST\_IMPL\_FORMAT\_C\_STRING\_AS\_STRING\_(\textcolor{keyword}{const} \textcolor{keywordtype}{wchar\_t}, ::std::wstring);}
+\DoxyCodeLine{399 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{400 }
+\DoxyCodeLine{401 \textcolor{preprocessor}{\#undef GTEST\_IMPL\_FORMAT\_C\_STRING\_AS\_STRING\_}}
+\DoxyCodeLine{402 }
+\DoxyCodeLine{403 \textcolor{comment}{// Formats a comparison assertion (e.g. ASSERT\_EQ, EXPECT\_LT, and etc)}}
+\DoxyCodeLine{404 \textcolor{comment}{// operand to be used in a failure message.  The type (but not value)}}
+\DoxyCodeLine{405 \textcolor{comment}{// of the other operand may affect the format.  This allows us to}}
+\DoxyCodeLine{406 \textcolor{comment}{// print a char* as a raw pointer when it is compared against another}}
+\DoxyCodeLine{407 \textcolor{comment}{// char* or void*, and print it as a C string when it is compared}}
+\DoxyCodeLine{408 \textcolor{comment}{// against an std::string object, for example.}}
+\DoxyCodeLine{409 \textcolor{comment}{//}}
+\DoxyCodeLine{410 \textcolor{comment}{// INTERNAL IMPLEMENTATION -\/ DO NOT USE IN A USER PROGRAM.}}
+\DoxyCodeLine{411 \textcolor{keyword}{template} <\textcolor{keyword}{typename} T1, \textcolor{keyword}{typename} T2>}
+\DoxyCodeLine{412 std::string FormatForComparisonFailureMessage(\textcolor{keyword}{const} T1\& value,}
+\DoxyCodeLine{413                                               \textcolor{keyword}{const} T2\& \textcolor{comment}{/* other\_operand */}) \{}
+\DoxyCodeLine{414   \textcolor{keywordflow}{return} \mbox{\hyperlink{classtesting_1_1internal_1_1FormatForComparison}{FormatForComparison<T1, T2>::Format}}(value);}
+\DoxyCodeLine{415 \}}
+\DoxyCodeLine{416 }
+\DoxyCodeLine{417 \textcolor{comment}{// UniversalPrinter<T>::Print(value, ostream\_ptr) prints the given}}
+\DoxyCodeLine{418 \textcolor{comment}{// value to the given ostream.  The caller must ensure that}}
+\DoxyCodeLine{419 \textcolor{comment}{// 'ostream\_ptr' is not NULL, or the behavior is undefined.}}
+\DoxyCodeLine{420 \textcolor{comment}{//}}
+\DoxyCodeLine{421 \textcolor{comment}{// We define UniversalPrinter as a class template (as opposed to a}}
+\DoxyCodeLine{422 \textcolor{comment}{// function template), as we need to partially specialize it for}}
+\DoxyCodeLine{423 \textcolor{comment}{// reference types, which cannot be done with function templates.}}
+\DoxyCodeLine{424 \textcolor{keyword}{template} <\textcolor{keyword}{typename} T>}
+\DoxyCodeLine{425 \textcolor{keyword}{class }UniversalPrinter;}
+\DoxyCodeLine{426 }
+\DoxyCodeLine{427 \textcolor{comment}{// Prints the given value using the << operator if it has one;}}
+\DoxyCodeLine{428 \textcolor{comment}{// otherwise prints the bytes in it.  This is what}}
+\DoxyCodeLine{429 \textcolor{comment}{// UniversalPrinter<T>::Print() does when PrintTo() is not specialized}}
+\DoxyCodeLine{430 \textcolor{comment}{// or overloaded for type T.}}
+\DoxyCodeLine{431 \textcolor{comment}{//}}
+\DoxyCodeLine{432 \textcolor{comment}{// A user can override this behavior for a class type Foo by defining}}
+\DoxyCodeLine{433 \textcolor{comment}{// an overload of PrintTo() in the namespace where Foo is defined.  We}}
+\DoxyCodeLine{434 \textcolor{comment}{// give the user this option as sometimes defining a << operator for}}
+\DoxyCodeLine{435 \textcolor{comment}{// Foo is not desirable (e.g. the coding style may prevent doing it,}}
+\DoxyCodeLine{436 \textcolor{comment}{// or there is already a << operator but it doesn't do what the user}}
+\DoxyCodeLine{437 \textcolor{comment}{// wants).}}
+\DoxyCodeLine{438 \textcolor{keyword}{template} <\textcolor{keyword}{typename} T>}
+\DoxyCodeLine{439 \textcolor{keywordtype}{void} PrintTo(\textcolor{keyword}{const} T\& value, ::std::ostream* os) \{}
+\DoxyCodeLine{440   internal::PrintWithFallback(value, os);}
+\DoxyCodeLine{441 \}}
+\DoxyCodeLine{442 }
+\DoxyCodeLine{443 \textcolor{comment}{// The following list of PrintTo() overloads tells}}
+\DoxyCodeLine{444 \textcolor{comment}{// UniversalPrinter<T>::Print() how to print standard types (built-\/in}}
+\DoxyCodeLine{445 \textcolor{comment}{// types, strings, plain arrays, and pointers).}}
+\DoxyCodeLine{446 }
+\DoxyCodeLine{447 \textcolor{comment}{// Overloads for various char types.}}
+\DoxyCodeLine{448 GTEST\_API\_ \textcolor{keywordtype}{void} PrintTo(\textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{char} c, ::std::ostream* os);}
+\DoxyCodeLine{449 GTEST\_API\_ \textcolor{keywordtype}{void} PrintTo(\textcolor{keywordtype}{signed} \textcolor{keywordtype}{char} c, ::std::ostream* os);}
+\DoxyCodeLine{450 \textcolor{keyword}{inline} \textcolor{keywordtype}{void} PrintTo(\textcolor{keywordtype}{char} c, ::std::ostream* os) \{}
+\DoxyCodeLine{451   \textcolor{comment}{// When printing a plain char, we always treat it as unsigned.  This}}
+\DoxyCodeLine{452   \textcolor{comment}{// way, the output won't be affected by whether the compiler thinks}}
+\DoxyCodeLine{453   \textcolor{comment}{// char is signed or not.}}
+\DoxyCodeLine{454   PrintTo(\textcolor{keyword}{static\_cast<}\textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{char}\textcolor{keyword}{>}(c), os);}
+\DoxyCodeLine{455 \}}
+\DoxyCodeLine{456 }
+\DoxyCodeLine{457 \textcolor{comment}{// Overloads for other simple built-\/in types.}}
+\DoxyCodeLine{458 \textcolor{keyword}{inline} \textcolor{keywordtype}{void} PrintTo(\textcolor{keywordtype}{bool} x, ::std::ostream* os) \{}
+\DoxyCodeLine{459   *os << (x ? \textcolor{stringliteral}{"{}true"{}} : \textcolor{stringliteral}{"{}false"{}});}
+\DoxyCodeLine{460 \}}
+\DoxyCodeLine{461 }
+\DoxyCodeLine{462 \textcolor{comment}{// Overload for wchar\_t type.}}
+\DoxyCodeLine{463 \textcolor{comment}{// Prints a wchar\_t as a symbol if it is printable or as its internal}}
+\DoxyCodeLine{464 \textcolor{comment}{// code otherwise and also as its decimal code (except for L'\(\backslash\)0').}}
+\DoxyCodeLine{465 \textcolor{comment}{// The L'\(\backslash\)0' char is printed as "{}L'\(\backslash\)\(\backslash\)0'"{}. The decimal code is printed}}
+\DoxyCodeLine{466 \textcolor{comment}{// as signed integer when wchar\_t is implemented by the compiler}}
+\DoxyCodeLine{467 \textcolor{comment}{// as a signed type and is printed as an unsigned integer when wchar\_t}}
+\DoxyCodeLine{468 \textcolor{comment}{// is implemented as an unsigned type.}}
+\DoxyCodeLine{469 GTEST\_API\_ \textcolor{keywordtype}{void} PrintTo(\textcolor{keywordtype}{wchar\_t} wc, ::std::ostream* os);}
+\DoxyCodeLine{470 }
+\DoxyCodeLine{471 GTEST\_API\_ \textcolor{keywordtype}{void} PrintTo(\textcolor{keywordtype}{char32\_t} c, ::std::ostream* os);}
+\DoxyCodeLine{472 \textcolor{keyword}{inline} \textcolor{keywordtype}{void} PrintTo(\textcolor{keywordtype}{char16\_t} c, ::std::ostream* os) \{}
+\DoxyCodeLine{473   PrintTo(ImplicitCast\_<char32\_t>(c), os);}
+\DoxyCodeLine{474 \}}
+\DoxyCodeLine{475 \textcolor{preprocessor}{\#ifdef \_\_cpp\_char8\_t}}
+\DoxyCodeLine{476 \textcolor{keyword}{inline} \textcolor{keywordtype}{void} PrintTo(\textcolor{keywordtype}{char8\_t} c, ::std::ostream* os) \{}
+\DoxyCodeLine{477   PrintTo(ImplicitCast\_<char32\_t>(c), os);}
+\DoxyCodeLine{478 \}}
+\DoxyCodeLine{479 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{480 }
+\DoxyCodeLine{481 \textcolor{comment}{// gcc/clang \_\_\{u,\}int128\_t}}
+\DoxyCodeLine{482 \textcolor{preprocessor}{\#if defined(\_\_SIZEOF\_INT128\_\_)}}
+\DoxyCodeLine{483 GTEST\_API\_ \textcolor{keywordtype}{void} PrintTo(\_\_uint128\_t v, ::std::ostream* os);}
+\DoxyCodeLine{484 GTEST\_API\_ \textcolor{keywordtype}{void} PrintTo(\_\_int128\_t v, ::std::ostream* os);}
+\DoxyCodeLine{485 \textcolor{preprocessor}{\#endif  }\textcolor{comment}{// \_\_SIZEOF\_INT128\_\_}}
+\DoxyCodeLine{486 }
+\DoxyCodeLine{487 \textcolor{comment}{// Overloads for C strings.}}
+\DoxyCodeLine{488 GTEST\_API\_ \textcolor{keywordtype}{void} PrintTo(\textcolor{keyword}{const} \textcolor{keywordtype}{char}* s, ::std::ostream* os);}
+\DoxyCodeLine{489 \textcolor{keyword}{inline} \textcolor{keywordtype}{void} PrintTo(\textcolor{keywordtype}{char}* s, ::std::ostream* os) \{}
+\DoxyCodeLine{490   PrintTo(ImplicitCast\_<const char*>(s), os);}
+\DoxyCodeLine{491 \}}
+\DoxyCodeLine{492 }
+\DoxyCodeLine{493 \textcolor{comment}{// signed/unsigned char is often used for representing binary data, so}}
+\DoxyCodeLine{494 \textcolor{comment}{// we print pointers to it as void* to be safe.}}
+\DoxyCodeLine{495 \textcolor{keyword}{inline} \textcolor{keywordtype}{void} PrintTo(\textcolor{keyword}{const} \textcolor{keywordtype}{signed} \textcolor{keywordtype}{char}* s, ::std::ostream* os) \{}
+\DoxyCodeLine{496   PrintTo(ImplicitCast\_<const void*>(s), os);}
+\DoxyCodeLine{497 \}}
+\DoxyCodeLine{498 \textcolor{keyword}{inline} \textcolor{keywordtype}{void} PrintTo(\textcolor{keywordtype}{signed} \textcolor{keywordtype}{char}* s, ::std::ostream* os) \{}
+\DoxyCodeLine{499   PrintTo(ImplicitCast\_<const void*>(s), os);}
+\DoxyCodeLine{500 \}}
+\DoxyCodeLine{501 \textcolor{keyword}{inline} \textcolor{keywordtype}{void} PrintTo(\textcolor{keyword}{const} \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{char}* s, ::std::ostream* os) \{}
+\DoxyCodeLine{502   PrintTo(ImplicitCast\_<const void*>(s), os);}
+\DoxyCodeLine{503 \}}
+\DoxyCodeLine{504 \textcolor{keyword}{inline} \textcolor{keywordtype}{void} PrintTo(\textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{char}* s, ::std::ostream* os) \{}
+\DoxyCodeLine{505   PrintTo(ImplicitCast\_<const void*>(s), os);}
+\DoxyCodeLine{506 \}}
+\DoxyCodeLine{507 \textcolor{preprocessor}{\#ifdef \_\_cpp\_char8\_t}}
+\DoxyCodeLine{508 \textcolor{comment}{// Overloads for u8 strings.}}
+\DoxyCodeLine{509 GTEST\_API\_ \textcolor{keywordtype}{void} PrintTo(\textcolor{keyword}{const} \textcolor{keywordtype}{char8\_t}* s, ::std::ostream* os);}
+\DoxyCodeLine{510 \textcolor{keyword}{inline} \textcolor{keywordtype}{void} PrintTo(\textcolor{keywordtype}{char8\_t}* s, ::std::ostream* os) \{}
+\DoxyCodeLine{511   PrintTo(ImplicitCast\_<const char8\_t*>(s), os);}
+\DoxyCodeLine{512 \}}
+\DoxyCodeLine{513 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{514 \textcolor{comment}{// Overloads for u16 strings.}}
+\DoxyCodeLine{515 GTEST\_API\_ \textcolor{keywordtype}{void} PrintTo(\textcolor{keyword}{const} \textcolor{keywordtype}{char16\_t}* s, ::std::ostream* os);}
+\DoxyCodeLine{516 \textcolor{keyword}{inline} \textcolor{keywordtype}{void} PrintTo(\textcolor{keywordtype}{char16\_t}* s, ::std::ostream* os) \{}
+\DoxyCodeLine{517   PrintTo(ImplicitCast\_<const char16\_t*>(s), os);}
+\DoxyCodeLine{518 \}}
+\DoxyCodeLine{519 \textcolor{comment}{// Overloads for u32 strings.}}
+\DoxyCodeLine{520 GTEST\_API\_ \textcolor{keywordtype}{void} PrintTo(\textcolor{keyword}{const} \textcolor{keywordtype}{char32\_t}* s, ::std::ostream* os);}
+\DoxyCodeLine{521 \textcolor{keyword}{inline} \textcolor{keywordtype}{void} PrintTo(\textcolor{keywordtype}{char32\_t}* s, ::std::ostream* os) \{}
+\DoxyCodeLine{522   PrintTo(ImplicitCast\_<const char32\_t*>(s), os);}
+\DoxyCodeLine{523 \}}
+\DoxyCodeLine{524 }
+\DoxyCodeLine{525 \textcolor{comment}{// MSVC can be configured to define wchar\_t as a typedef of unsigned}}
+\DoxyCodeLine{526 \textcolor{comment}{// short.  It defines \_NATIVE\_WCHAR\_T\_DEFINED when wchar\_t is a native}}
+\DoxyCodeLine{527 \textcolor{comment}{// type.  When wchar\_t is a typedef, defining an overload for const}}
+\DoxyCodeLine{528 \textcolor{comment}{// wchar\_t* would cause unsigned short* be printed as a wide string,}}
+\DoxyCodeLine{529 \textcolor{comment}{// possibly causing invalid memory accesses.}}
+\DoxyCodeLine{530 \textcolor{preprocessor}{\#if !defined(\_MSC\_VER) || defined(\_NATIVE\_WCHAR\_T\_DEFINED)}}
+\DoxyCodeLine{531 \textcolor{comment}{// Overloads for wide C strings}}
+\DoxyCodeLine{532 GTEST\_API\_ \textcolor{keywordtype}{void} PrintTo(\textcolor{keyword}{const} \textcolor{keywordtype}{wchar\_t}* s, ::std::ostream* os);}
+\DoxyCodeLine{533 \textcolor{keyword}{inline} \textcolor{keywordtype}{void} PrintTo(\textcolor{keywordtype}{wchar\_t}* s, ::std::ostream* os) \{}
+\DoxyCodeLine{534   PrintTo(ImplicitCast\_<const wchar\_t*>(s), os);}
+\DoxyCodeLine{535 \}}
+\DoxyCodeLine{536 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{537 }
+\DoxyCodeLine{538 \textcolor{comment}{// Overload for C arrays.  Multi-\/dimensional arrays are printed}}
+\DoxyCodeLine{539 \textcolor{comment}{// properly.}}
+\DoxyCodeLine{540 }
+\DoxyCodeLine{541 \textcolor{comment}{// Prints the given number of elements in an array, without printing}}
+\DoxyCodeLine{542 \textcolor{comment}{// the curly braces.}}
+\DoxyCodeLine{543 \textcolor{keyword}{template} <\textcolor{keyword}{typename} T>}
+\DoxyCodeLine{544 \textcolor{keywordtype}{void} PrintRawArrayTo(\textcolor{keyword}{const} T a[], \textcolor{keywordtype}{size\_t} count, ::std::ostream* os) \{}
+\DoxyCodeLine{545   UniversalPrint(a[0], os);}
+\DoxyCodeLine{546   \textcolor{keywordflow}{for} (\textcolor{keywordtype}{size\_t} i = 1; i != count; i++) \{}
+\DoxyCodeLine{547     *os << \textcolor{stringliteral}{"{}, "{}};}
+\DoxyCodeLine{548     UniversalPrint(a[i], os);}
+\DoxyCodeLine{549   \}}
+\DoxyCodeLine{550 \}}
+\DoxyCodeLine{551 }
+\DoxyCodeLine{552 \textcolor{comment}{// Overloads for ::std::string.}}
+\DoxyCodeLine{553 GTEST\_API\_ \textcolor{keywordtype}{void} PrintStringTo(const ::std::string\& s, ::std::ostream* os);}
+\DoxyCodeLine{554 \textcolor{keyword}{inline} \textcolor{keywordtype}{void} PrintTo(const ::std::string\& s, ::std::ostream* os) \{}
+\DoxyCodeLine{555   PrintStringTo(s, os);}
+\DoxyCodeLine{556 \}}
+\DoxyCodeLine{557 }
+\DoxyCodeLine{558 \textcolor{comment}{// Overloads for ::std::u8string}}
+\DoxyCodeLine{559 \textcolor{preprocessor}{\#ifdef \_\_cpp\_char8\_t}}
+\DoxyCodeLine{560 GTEST\_API\_ \textcolor{keywordtype}{void} PrintU8StringTo(const ::std::u8string\& s, ::std::ostream* os);}
+\DoxyCodeLine{561 \textcolor{keyword}{inline} \textcolor{keywordtype}{void} PrintTo(const ::std::u8string\& s, ::std::ostream* os) \{}
+\DoxyCodeLine{562   PrintU8StringTo(s, os);}
+\DoxyCodeLine{563 \}}
+\DoxyCodeLine{564 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{565 }
+\DoxyCodeLine{566 \textcolor{comment}{// Overloads for ::std::u16string}}
+\DoxyCodeLine{567 GTEST\_API\_ \textcolor{keywordtype}{void} PrintU16StringTo(const ::std::u16string\& s, ::std::ostream* os);}
+\DoxyCodeLine{568 \textcolor{keyword}{inline} \textcolor{keywordtype}{void} PrintTo(const ::std::u16string\& s, ::std::ostream* os) \{}
+\DoxyCodeLine{569   PrintU16StringTo(s, os);}
+\DoxyCodeLine{570 \}}
+\DoxyCodeLine{571 }
+\DoxyCodeLine{572 \textcolor{comment}{// Overloads for ::std::u32string}}
+\DoxyCodeLine{573 GTEST\_API\_ \textcolor{keywordtype}{void} PrintU32StringTo(const ::std::u32string\& s, ::std::ostream* os);}
+\DoxyCodeLine{574 \textcolor{keyword}{inline} \textcolor{keywordtype}{void} PrintTo(const ::std::u32string\& s, ::std::ostream* os) \{}
+\DoxyCodeLine{575   PrintU32StringTo(s, os);}
+\DoxyCodeLine{576 \}}
+\DoxyCodeLine{577 }
+\DoxyCodeLine{578 \textcolor{comment}{// Overloads for ::std::wstring.}}
+\DoxyCodeLine{579 \textcolor{preprocessor}{\#if GTEST\_HAS\_STD\_WSTRING}}
+\DoxyCodeLine{580 GTEST\_API\_ \textcolor{keywordtype}{void} PrintWideStringTo(const ::std::wstring\& s, ::std::ostream* os);}
+\DoxyCodeLine{581 \textcolor{keyword}{inline} \textcolor{keywordtype}{void} PrintTo(const ::std::wstring\& s, ::std::ostream* os) \{}
+\DoxyCodeLine{582   PrintWideStringTo(s, os);}
+\DoxyCodeLine{583 \}}
+\DoxyCodeLine{584 \textcolor{preprocessor}{\#endif  }\textcolor{comment}{// GTEST\_HAS\_STD\_WSTRING}}
+\DoxyCodeLine{585 }
+\DoxyCodeLine{586 \textcolor{preprocessor}{\#if GTEST\_INTERNAL\_HAS\_STRING\_VIEW}}
+\DoxyCodeLine{587 \textcolor{comment}{// Overload for internal::StringView.}}
+\DoxyCodeLine{588 \textcolor{keyword}{inline} \textcolor{keywordtype}{void} PrintTo(internal::StringView sp, ::std::ostream* os) \{}
+\DoxyCodeLine{589   PrintTo(::std::string(sp), os);}
+\DoxyCodeLine{590 \}}
+\DoxyCodeLine{591 \textcolor{preprocessor}{\#endif  }\textcolor{comment}{// GTEST\_INTERNAL\_HAS\_STRING\_VIEW}}
+\DoxyCodeLine{592 }
+\DoxyCodeLine{593 \textcolor{keyword}{inline} \textcolor{keywordtype}{void} PrintTo(std::nullptr\_t, ::std::ostream* os) \{ *os << \textcolor{stringliteral}{"{}(nullptr)"{}}; \}}
+\DoxyCodeLine{594 }
+\DoxyCodeLine{595 \textcolor{preprocessor}{\#if GTEST\_HAS\_RTTI}}
+\DoxyCodeLine{596 \textcolor{keyword}{inline} \textcolor{keywordtype}{void} PrintTo(\textcolor{keyword}{const} std::type\_info\& info, std::ostream* os) \{}
+\DoxyCodeLine{597   *os << internal::GetTypeName(info);}
+\DoxyCodeLine{598 \}}
+\DoxyCodeLine{599 \textcolor{preprocessor}{\#endif  }\textcolor{comment}{// GTEST\_HAS\_RTTI}}
+\DoxyCodeLine{600 }
+\DoxyCodeLine{601 \textcolor{keyword}{template} <\textcolor{keyword}{typename} T>}
+\DoxyCodeLine{602 \textcolor{keywordtype}{void} PrintTo(std::reference\_wrapper<T> ref, ::std::ostream* os) \{}
+\DoxyCodeLine{603   UniversalPrinter<T\&>::Print(ref.get(), os);}
+\DoxyCodeLine{604 \}}
+\DoxyCodeLine{605 }
+\DoxyCodeLine{606 \textcolor{keyword}{inline} \textcolor{keyword}{const} \textcolor{keywordtype}{void}* VoidifyPointer(\textcolor{keyword}{const} \textcolor{keywordtype}{void}* p) \{ \textcolor{keywordflow}{return} p; \}}
+\DoxyCodeLine{607 \textcolor{keyword}{inline} \textcolor{keyword}{const} \textcolor{keywordtype}{void}* VoidifyPointer(\textcolor{keyword}{volatile} \textcolor{keyword}{const} \textcolor{keywordtype}{void}* p) \{}
+\DoxyCodeLine{608   \textcolor{keywordflow}{return} \textcolor{keyword}{const\_cast<}\textcolor{keyword}{const }\textcolor{keywordtype}{void}*\textcolor{keyword}{>}(p);}
+\DoxyCodeLine{609 \}}
+\DoxyCodeLine{610 }
+\DoxyCodeLine{611 \textcolor{keyword}{template} <\textcolor{keyword}{typename} T, \textcolor{keyword}{typename} Ptr>}
+\DoxyCodeLine{612 \textcolor{keywordtype}{void} PrintSmartPointer(\textcolor{keyword}{const} Ptr\& ptr, std::ostream* os, \textcolor{keywordtype}{char}) \{}
+\DoxyCodeLine{613   \textcolor{keywordflow}{if} (ptr == \textcolor{keyword}{nullptr}) \{}
+\DoxyCodeLine{614     *os << \textcolor{stringliteral}{"{}(nullptr)"{}};}
+\DoxyCodeLine{615   \} \textcolor{keywordflow}{else} \{}
+\DoxyCodeLine{616     \textcolor{comment}{// We can't print the value. Just print the pointer..}}
+\DoxyCodeLine{617     *os << \textcolor{stringliteral}{"{}("{}} << (VoidifyPointer)(ptr.get()) << \textcolor{stringliteral}{"{})"{}};}
+\DoxyCodeLine{618   \}}
+\DoxyCodeLine{619 \}}
+\DoxyCodeLine{620 \textcolor{keyword}{template} <\textcolor{keyword}{typename} T, \textcolor{keyword}{typename} Ptr,}
+\DoxyCodeLine{621           \textcolor{keyword}{typename} = \textcolor{keyword}{typename} std::enable\_if<!std::is\_void<T>::value \&\&}
+\DoxyCodeLine{622                                              !std::is\_array<T>::value>::type>}
+\DoxyCodeLine{623 \textcolor{keywordtype}{void} PrintSmartPointer(\textcolor{keyword}{const} Ptr\& ptr, std::ostream* os, \textcolor{keywordtype}{int}) \{}
+\DoxyCodeLine{624   \textcolor{keywordflow}{if} (ptr == \textcolor{keyword}{nullptr}) \{}
+\DoxyCodeLine{625     *os << \textcolor{stringliteral}{"{}(nullptr)"{}};}
+\DoxyCodeLine{626   \} \textcolor{keywordflow}{else} \{}
+\DoxyCodeLine{627     *os << \textcolor{stringliteral}{"{}(ptr = "{}} << (VoidifyPointer)(ptr.get()) << \textcolor{stringliteral}{"{}, value = "{}};}
+\DoxyCodeLine{628     UniversalPrinter<T>::Print(*ptr, os);}
+\DoxyCodeLine{629     *os << \textcolor{stringliteral}{"{})"{}};}
+\DoxyCodeLine{630   \}}
+\DoxyCodeLine{631 \}}
+\DoxyCodeLine{632 }
+\DoxyCodeLine{633 \textcolor{keyword}{template} <\textcolor{keyword}{typename} T, \textcolor{keyword}{typename} D>}
+\DoxyCodeLine{634 \textcolor{keywordtype}{void} PrintTo(\textcolor{keyword}{const} std::unique\_ptr<T, D>\& ptr, std::ostream* os) \{}
+\DoxyCodeLine{635   (PrintSmartPointer<T>)(ptr, os, 0);}
+\DoxyCodeLine{636 \}}
+\DoxyCodeLine{637 }
+\DoxyCodeLine{638 \textcolor{keyword}{template} <\textcolor{keyword}{typename} T>}
+\DoxyCodeLine{639 \textcolor{keywordtype}{void} PrintTo(\textcolor{keyword}{const} std::shared\_ptr<T>\& ptr, std::ostream* os) \{}
+\DoxyCodeLine{640   (PrintSmartPointer<T>)(ptr, os, 0);}
+\DoxyCodeLine{641 \}}
+\DoxyCodeLine{642 }
+\DoxyCodeLine{643 \textcolor{comment}{// Helper function for printing a tuple.  T must be instantiated with}}
+\DoxyCodeLine{644 \textcolor{comment}{// a tuple type.}}
+\DoxyCodeLine{645 \textcolor{keyword}{template} <\textcolor{keyword}{typename} T>}
+\DoxyCodeLine{646 \textcolor{keywordtype}{void} PrintTupleTo(\textcolor{keyword}{const} T\&, std::integral\_constant<size\_t, 0>,}
+\DoxyCodeLine{647                   ::std::ostream*) \{\}}
+\DoxyCodeLine{648 }
+\DoxyCodeLine{649 \textcolor{keyword}{template} <\textcolor{keyword}{typename} T, \textcolor{keywordtype}{size\_t} I>}
+\DoxyCodeLine{650 \textcolor{keywordtype}{void} PrintTupleTo(\textcolor{keyword}{const} T\& t, std::integral\_constant<size\_t, I>,}
+\DoxyCodeLine{651                   ::std::ostream* os) \{}
+\DoxyCodeLine{652   PrintTupleTo(t, std::integral\_constant<size\_t, I -\/ 1>(), os);}
+\DoxyCodeLine{653   GTEST\_INTENTIONAL\_CONST\_COND\_PUSH\_()}
+\DoxyCodeLine{654   if (I > 1) \{}
+\DoxyCodeLine{655     GTEST\_INTENTIONAL\_CONST\_COND\_POP\_()}
+\DoxyCodeLine{656     *os << \textcolor{stringliteral}{"{}, "{}};}
+\DoxyCodeLine{657   \}}
+\DoxyCodeLine{658   UniversalPrinter<\textcolor{keyword}{typename} std::tuple\_element<I -\/ 1, T>::type>::Print(}
+\DoxyCodeLine{659       std::get<I -\/ 1>(t), os);}
+\DoxyCodeLine{660 \}}
+\DoxyCodeLine{661 }
+\DoxyCodeLine{662 \textcolor{keyword}{template} <\textcolor{keyword}{typename}... Types>}
+\DoxyCodeLine{663 \textcolor{keywordtype}{void} PrintTo(const ::std::tuple<Types...>\& t, ::std::ostream* os) \{}
+\DoxyCodeLine{664   *os << \textcolor{stringliteral}{"{}("{}};}
+\DoxyCodeLine{665   PrintTupleTo(t, std::integral\_constant<\textcolor{keywordtype}{size\_t}, \textcolor{keyword}{sizeof}...(Types)>(), os);}
+\DoxyCodeLine{666   *os << \textcolor{stringliteral}{"{})"{}};}
+\DoxyCodeLine{667 \}}
+\DoxyCodeLine{668 }
+\DoxyCodeLine{669 \textcolor{comment}{// Overload for std::pair.}}
+\DoxyCodeLine{670 \textcolor{keyword}{template} <\textcolor{keyword}{typename} T1, \textcolor{keyword}{typename} T2>}
+\DoxyCodeLine{671 \textcolor{keywordtype}{void} PrintTo(const ::std::pair<T1, T2>\& value, ::std::ostream* os) \{}
+\DoxyCodeLine{672   *os << \textcolor{charliteral}{'('};}
+\DoxyCodeLine{673   \textcolor{comment}{// We cannot use UniversalPrint(value.first, os) here, as T1 may be}}
+\DoxyCodeLine{674   \textcolor{comment}{// a reference type.  The same for printing value.second.}}
+\DoxyCodeLine{675   UniversalPrinter<T1>::Print(value.first, os);}
+\DoxyCodeLine{676   *os << \textcolor{stringliteral}{"{}, "{}};}
+\DoxyCodeLine{677   UniversalPrinter<T2>::Print(value.second, os);}
+\DoxyCodeLine{678   *os << \textcolor{charliteral}{')'};}
+\DoxyCodeLine{679 \}}
+\DoxyCodeLine{680 }
+\DoxyCodeLine{681 \textcolor{comment}{// Implements printing a non-\/reference type T by letting the compiler}}
+\DoxyCodeLine{682 \textcolor{comment}{// pick the right overload of PrintTo() for T.}}
+\DoxyCodeLine{683 \textcolor{keyword}{template} <\textcolor{keyword}{typename} T>}
+\DoxyCodeLine{684 \textcolor{keyword}{class }\mbox{\hyperlink{classtesting_1_1internal_1_1UniversalPrinter}{UniversalPrinter}} \{}
+\DoxyCodeLine{685  \textcolor{keyword}{public}:}
+\DoxyCodeLine{686   \textcolor{comment}{// MSVC warns about adding const to a function type, so we want to}}
+\DoxyCodeLine{687   \textcolor{comment}{// disable the warning.}}
+\DoxyCodeLine{688   GTEST\_DISABLE\_MSC\_WARNINGS\_PUSH\_(4180)}
+\DoxyCodeLine{689 }
+\DoxyCodeLine{690   \textcolor{comment}{// Note: we deliberately don't call this PrintTo(), as that name}}
+\DoxyCodeLine{691   \textcolor{comment}{// conflicts with ::testing::internal::PrintTo in the body of the}}
+\DoxyCodeLine{692   \textcolor{comment}{// function.}}
+\DoxyCodeLine{693   \textcolor{keyword}{static} \textcolor{keywordtype}{void} Print(\textcolor{keyword}{const} T\& value, ::std::ostream* os) \{}
+\DoxyCodeLine{694     \textcolor{comment}{// By default, ::testing::internal::PrintTo() is used for printing}}
+\DoxyCodeLine{695     \textcolor{comment}{// the value.}}
+\DoxyCodeLine{696     \textcolor{comment}{//}}
+\DoxyCodeLine{697     \textcolor{comment}{// Thanks to Koenig look-\/up, if T is a class and has its own}}
+\DoxyCodeLine{698     \textcolor{comment}{// PrintTo() function defined in its namespace, that function will}}
+\DoxyCodeLine{699     \textcolor{comment}{// be visible here.  Since it is more specific than the generic ones}}
+\DoxyCodeLine{700     \textcolor{comment}{// in ::testing::internal, it will be picked by the compiler in the}}
+\DoxyCodeLine{701     \textcolor{comment}{// following statement -\/ exactly what we want.}}
+\DoxyCodeLine{702     PrintTo(value, os);}
+\DoxyCodeLine{703   \}}
+\DoxyCodeLine{704 }
+\DoxyCodeLine{705   GTEST\_DISABLE\_MSC\_WARNINGS\_POP\_()}
+\DoxyCodeLine{706 \};}
+\DoxyCodeLine{707 }
+\DoxyCodeLine{708 \textcolor{comment}{// Remove any const-\/qualifiers before passing a type to UniversalPrinter.}}
+\DoxyCodeLine{709 \textcolor{keyword}{template} <\textcolor{keyword}{typename} T>}
+\DoxyCodeLine{710 \textcolor{keyword}{class }\mbox{\hyperlink{classtesting_1_1internal_1_1UniversalPrinter}{UniversalPrinter}}<const T> : \textcolor{keyword}{public} \mbox{\hyperlink{classtesting_1_1internal_1_1UniversalPrinter}{UniversalPrinter}}<T> \{\};}
+\DoxyCodeLine{711 }
+\DoxyCodeLine{712 \textcolor{preprocessor}{\#if GTEST\_INTERNAL\_HAS\_ANY}}
+\DoxyCodeLine{713 }
+\DoxyCodeLine{714 \textcolor{comment}{// Printer for std::any / absl::any}}
+\DoxyCodeLine{715 }
+\DoxyCodeLine{716 \textcolor{keyword}{template} <>}
+\DoxyCodeLine{717 \textcolor{keyword}{class }\mbox{\hyperlink{classtesting_1_1internal_1_1UniversalPrinter}{UniversalPrinter}}<Any> \{}
+\DoxyCodeLine{718  \textcolor{keyword}{public}:}
+\DoxyCodeLine{719   \textcolor{keyword}{static} \textcolor{keywordtype}{void} Print(\textcolor{keyword}{const} Any\& value, ::std::ostream* os) \{}
+\DoxyCodeLine{720     \textcolor{keywordflow}{if} (value.has\_value()) \{}
+\DoxyCodeLine{721       *os << \textcolor{stringliteral}{"{}value of type "{}} << GetTypeName(value);}
+\DoxyCodeLine{722     \} \textcolor{keywordflow}{else} \{}
+\DoxyCodeLine{723       *os << \textcolor{stringliteral}{"{}no value"{}};}
+\DoxyCodeLine{724     \}}
+\DoxyCodeLine{725   \}}
+\DoxyCodeLine{726 }
+\DoxyCodeLine{727  \textcolor{keyword}{private}:}
+\DoxyCodeLine{728   \textcolor{keyword}{static} std::string GetTypeName(\textcolor{keyword}{const} Any\& value) \{}
+\DoxyCodeLine{729 \textcolor{preprocessor}{\#if GTEST\_HAS\_RTTI}}
+\DoxyCodeLine{730     \textcolor{keywordflow}{return} internal::GetTypeName(value.type());}
+\DoxyCodeLine{731 \textcolor{preprocessor}{\#else}}
+\DoxyCodeLine{732     \textcolor{keyword}{static\_cast<}\textcolor{keywordtype}{void}\textcolor{keyword}{>}(value);  \textcolor{comment}{// possibly unused}}
+\DoxyCodeLine{733     \textcolor{keywordflow}{return} \textcolor{stringliteral}{"{}<unknown\_type>"{}};}
+\DoxyCodeLine{734 \textcolor{preprocessor}{\#endif  }\textcolor{comment}{// GTEST\_HAS\_RTTI}}
+\DoxyCodeLine{735   \}}
+\DoxyCodeLine{736 \};}
+\DoxyCodeLine{737 }
+\DoxyCodeLine{738 \textcolor{preprocessor}{\#endif  }\textcolor{comment}{// GTEST\_INTERNAL\_HAS\_ANY}}
+\DoxyCodeLine{739 }
+\DoxyCodeLine{740 \textcolor{preprocessor}{\#if GTEST\_INTERNAL\_HAS\_OPTIONAL}}
+\DoxyCodeLine{741 }
+\DoxyCodeLine{742 \textcolor{comment}{// Printer for std::optional / absl::optional}}
+\DoxyCodeLine{743 }
+\DoxyCodeLine{744 \textcolor{keyword}{template} <\textcolor{keyword}{typename} T>}
+\DoxyCodeLine{745 \textcolor{keyword}{class }UniversalPrinter<Optional<T>> \{}
+\DoxyCodeLine{746  \textcolor{keyword}{public}:}
+\DoxyCodeLine{747   \textcolor{keyword}{static} \textcolor{keywordtype}{void} Print(\textcolor{keyword}{const} Optional<T>\& value, ::std::ostream* os) \{}
+\DoxyCodeLine{748     *os << \textcolor{charliteral}{'('};}
+\DoxyCodeLine{749     \textcolor{keywordflow}{if} (!value) \{}
+\DoxyCodeLine{750       *os << \textcolor{stringliteral}{"{}nullopt"{}};}
+\DoxyCodeLine{751     \} \textcolor{keywordflow}{else} \{}
+\DoxyCodeLine{752       UniversalPrint(*value, os);}
+\DoxyCodeLine{753     \}}
+\DoxyCodeLine{754     *os << \textcolor{charliteral}{')'};}
+\DoxyCodeLine{755   \}}
+\DoxyCodeLine{756 \};}
+\DoxyCodeLine{757 }
+\DoxyCodeLine{758 \textcolor{keyword}{template} <>}
+\DoxyCodeLine{759 \textcolor{keyword}{class }UniversalPrinter<decltype(Nullopt())> \{}
+\DoxyCodeLine{760  \textcolor{keyword}{public}:}
+\DoxyCodeLine{761   \textcolor{keyword}{static} \textcolor{keywordtype}{void} Print(\textcolor{keyword}{decltype}(Nullopt()), ::std::ostream* os) \{}
+\DoxyCodeLine{762     *os << \textcolor{stringliteral}{"{}(nullopt)"{}};}
+\DoxyCodeLine{763   \}}
+\DoxyCodeLine{764 \};}
+\DoxyCodeLine{765 }
+\DoxyCodeLine{766 \textcolor{preprocessor}{\#endif  }\textcolor{comment}{// GTEST\_INTERNAL\_HAS\_OPTIONAL}}
+\DoxyCodeLine{767 }
+\DoxyCodeLine{768 \textcolor{preprocessor}{\#if GTEST\_INTERNAL\_HAS\_VARIANT}}
+\DoxyCodeLine{769 }
+\DoxyCodeLine{770 \textcolor{comment}{// Printer for std::variant / absl::variant}}
+\DoxyCodeLine{771 }
+\DoxyCodeLine{772 \textcolor{keyword}{template} <\textcolor{keyword}{typename}... T>}
+\DoxyCodeLine{773 \textcolor{keyword}{class }UniversalPrinter<Variant<T...>> \{}
+\DoxyCodeLine{774  \textcolor{keyword}{public}:}
+\DoxyCodeLine{775   \textcolor{keyword}{static} \textcolor{keywordtype}{void} Print(\textcolor{keyword}{const} Variant<T...>\& value, ::std::ostream* os) \{}
+\DoxyCodeLine{776     *os << \textcolor{charliteral}{'('};}
+\DoxyCodeLine{777 \textcolor{preprocessor}{\#if GTEST\_HAS\_ABSL}}
+\DoxyCodeLine{778     absl::visit(Visitor\{os, value.index()\}, value);}
+\DoxyCodeLine{779 \textcolor{preprocessor}{\#else}}
+\DoxyCodeLine{780     std::visit(Visitor\{os, value.index()\}, value);}
+\DoxyCodeLine{781 \textcolor{preprocessor}{\#endif  }\textcolor{comment}{// GTEST\_HAS\_ABSL}}
+\DoxyCodeLine{782     *os << \textcolor{charliteral}{')'};}
+\DoxyCodeLine{783   \}}
+\DoxyCodeLine{784 }
+\DoxyCodeLine{785  \textcolor{keyword}{private}:}
+\DoxyCodeLine{786   \textcolor{keyword}{struct }Visitor \{}
+\DoxyCodeLine{787     \textcolor{keyword}{template} <\textcolor{keyword}{typename} U>}
+\DoxyCodeLine{788     \textcolor{keywordtype}{void} operator()(\textcolor{keyword}{const} U\& u)\textcolor{keyword}{ const }\{}
+\DoxyCodeLine{789       *os << \textcolor{stringliteral}{"{}'"{}} << GetTypeName<U>() << \textcolor{stringliteral}{"{}(index = "{}} << index}
+\DoxyCodeLine{790           << \textcolor{stringliteral}{"{})' with value "{}};}
+\DoxyCodeLine{791       UniversalPrint(u, os);}
+\DoxyCodeLine{792     \}}
+\DoxyCodeLine{793     ::std::ostream* os;}
+\DoxyCodeLine{794     std::size\_t index;}
+\DoxyCodeLine{795   \};}
+\DoxyCodeLine{796 \};}
+\DoxyCodeLine{797 }
+\DoxyCodeLine{798 \textcolor{preprocessor}{\#endif  }\textcolor{comment}{// GTEST\_INTERNAL\_HAS\_VARIANT}}
+\DoxyCodeLine{799 }
+\DoxyCodeLine{800 \textcolor{comment}{// UniversalPrintArray(begin, len, os) prints an array of 'len'}}
+\DoxyCodeLine{801 \textcolor{comment}{// elements, starting at address 'begin'.}}
+\DoxyCodeLine{802 \textcolor{keyword}{template} <\textcolor{keyword}{typename} T>}
+\DoxyCodeLine{803 \textcolor{keywordtype}{void} UniversalPrintArray(\textcolor{keyword}{const} T* begin, \textcolor{keywordtype}{size\_t} len, ::std::ostream* os) \{}
+\DoxyCodeLine{804   \textcolor{keywordflow}{if} (len == 0) \{}
+\DoxyCodeLine{805     *os << \textcolor{stringliteral}{"{}\{\}"{}};}
+\DoxyCodeLine{806   \} \textcolor{keywordflow}{else} \{}
+\DoxyCodeLine{807     *os << \textcolor{stringliteral}{"{}\{ "{}};}
+\DoxyCodeLine{808     \textcolor{keyword}{const} \textcolor{keywordtype}{size\_t} kThreshold = 18;}
+\DoxyCodeLine{809     \textcolor{keyword}{const} \textcolor{keywordtype}{size\_t} kChunkSize = 8;}
+\DoxyCodeLine{810     \textcolor{comment}{// If the array has more than kThreshold elements, we'll have to}}
+\DoxyCodeLine{811     \textcolor{comment}{// omit some details by printing only the first and the last}}
+\DoxyCodeLine{812     \textcolor{comment}{// kChunkSize elements.}}
+\DoxyCodeLine{813     \textcolor{keywordflow}{if} (len <= kThreshold) \{}
+\DoxyCodeLine{814       PrintRawArrayTo(begin, len, os);}
+\DoxyCodeLine{815     \} \textcolor{keywordflow}{else} \{}
+\DoxyCodeLine{816       PrintRawArrayTo(begin, kChunkSize, os);}
+\DoxyCodeLine{817       *os << \textcolor{stringliteral}{"{}, ..., "{}};}
+\DoxyCodeLine{818       PrintRawArrayTo(begin + len -\/ kChunkSize, kChunkSize, os);}
+\DoxyCodeLine{819     \}}
+\DoxyCodeLine{820     *os << \textcolor{stringliteral}{"{} \}"{}};}
+\DoxyCodeLine{821   \}}
+\DoxyCodeLine{822 \}}
+\DoxyCodeLine{823 \textcolor{comment}{// This overload prints a (const) char array compactly.}}
+\DoxyCodeLine{824 GTEST\_API\_ \textcolor{keywordtype}{void} UniversalPrintArray(\textcolor{keyword}{const} \textcolor{keywordtype}{char}* begin, \textcolor{keywordtype}{size\_t} len,}
+\DoxyCodeLine{825                                     ::std::ostream* os);}
+\DoxyCodeLine{826 }
+\DoxyCodeLine{827 \textcolor{preprocessor}{\#ifdef \_\_cpp\_char8\_t}}
+\DoxyCodeLine{828 \textcolor{comment}{// This overload prints a (const) char8\_t array compactly.}}
+\DoxyCodeLine{829 GTEST\_API\_ \textcolor{keywordtype}{void} UniversalPrintArray(\textcolor{keyword}{const} \textcolor{keywordtype}{char8\_t}* begin, \textcolor{keywordtype}{size\_t} len,}
+\DoxyCodeLine{830                                     ::std::ostream* os);}
+\DoxyCodeLine{831 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{832 }
+\DoxyCodeLine{833 \textcolor{comment}{// This overload prints a (const) char16\_t array compactly.}}
+\DoxyCodeLine{834 GTEST\_API\_ \textcolor{keywordtype}{void} UniversalPrintArray(\textcolor{keyword}{const} \textcolor{keywordtype}{char16\_t}* begin, \textcolor{keywordtype}{size\_t} len,}
+\DoxyCodeLine{835                                     ::std::ostream* os);}
+\DoxyCodeLine{836 }
+\DoxyCodeLine{837 \textcolor{comment}{// This overload prints a (const) char32\_t array compactly.}}
+\DoxyCodeLine{838 GTEST\_API\_ \textcolor{keywordtype}{void} UniversalPrintArray(\textcolor{keyword}{const} \textcolor{keywordtype}{char32\_t}* begin, \textcolor{keywordtype}{size\_t} len,}
+\DoxyCodeLine{839                                     ::std::ostream* os);}
+\DoxyCodeLine{840 }
+\DoxyCodeLine{841 \textcolor{comment}{// This overload prints a (const) wchar\_t array compactly.}}
+\DoxyCodeLine{842 GTEST\_API\_ \textcolor{keywordtype}{void} UniversalPrintArray(\textcolor{keyword}{const} \textcolor{keywordtype}{wchar\_t}* begin, \textcolor{keywordtype}{size\_t} len,}
+\DoxyCodeLine{843                                     ::std::ostream* os);}
+\DoxyCodeLine{844 }
+\DoxyCodeLine{845 \textcolor{comment}{// Implements printing an array type T[N].}}
+\DoxyCodeLine{846 \textcolor{keyword}{template} <\textcolor{keyword}{typename} T, \textcolor{keywordtype}{size\_t} N>}
+\DoxyCodeLine{847 \textcolor{keyword}{class }\mbox{\hyperlink{classtesting_1_1internal_1_1UniversalPrinter}{UniversalPrinter}}<T[N]> \{}
+\DoxyCodeLine{848  \textcolor{keyword}{public}:}
+\DoxyCodeLine{849   \textcolor{comment}{// Prints the given array, omitting some elements when there are too}}
+\DoxyCodeLine{850   \textcolor{comment}{// many.}}
+\DoxyCodeLine{851   \textcolor{keyword}{static} \textcolor{keywordtype}{void} Print(\textcolor{keyword}{const} T (\&a)[N], ::std::ostream* os) \{}
+\DoxyCodeLine{852     UniversalPrintArray(a, N, os);}
+\DoxyCodeLine{853   \}}
+\DoxyCodeLine{854 \};}
+\DoxyCodeLine{855 }
+\DoxyCodeLine{856 \textcolor{comment}{// Implements printing a reference type T\&.}}
+\DoxyCodeLine{857 \textcolor{keyword}{template} <\textcolor{keyword}{typename} T>}
+\DoxyCodeLine{858 \textcolor{keyword}{class }\mbox{\hyperlink{classtesting_1_1internal_1_1UniversalPrinter}{UniversalPrinter}}<T\&> \{}
+\DoxyCodeLine{859  \textcolor{keyword}{public}:}
+\DoxyCodeLine{860   \textcolor{comment}{// MSVC warns about adding const to a function type, so we want to}}
+\DoxyCodeLine{861   \textcolor{comment}{// disable the warning.}}
+\DoxyCodeLine{862   GTEST\_DISABLE\_MSC\_WARNINGS\_PUSH\_(4180)}
+\DoxyCodeLine{863 }
+\DoxyCodeLine{864   \textcolor{keyword}{static} \textcolor{keywordtype}{void} Print(\textcolor{keyword}{const} T\& value, ::std::ostream* os) \{}
+\DoxyCodeLine{865     \textcolor{comment}{// Prints the address of the value.  We use reinterpret\_cast here}}
+\DoxyCodeLine{866     \textcolor{comment}{// as static\_cast doesn't compile when T is a function type.}}
+\DoxyCodeLine{867     *os << \textcolor{stringliteral}{"{}@"{}} << \textcolor{keyword}{reinterpret\_cast<}\textcolor{keyword}{const }\textcolor{keywordtype}{void}*\textcolor{keyword}{>}(\&value) << \textcolor{stringliteral}{"{} "{}};}
+\DoxyCodeLine{868 }
+\DoxyCodeLine{869     \textcolor{comment}{// Then prints the value itself.}}
+\DoxyCodeLine{870     UniversalPrint(value, os);}
+\DoxyCodeLine{871   \}}
+\DoxyCodeLine{872 }
+\DoxyCodeLine{873   GTEST\_DISABLE\_MSC\_WARNINGS\_POP\_()}
+\DoxyCodeLine{874 \};}
+\DoxyCodeLine{875 }
+\DoxyCodeLine{876 \textcolor{comment}{// Prints a value tersely: for a reference type, the referenced value}}
+\DoxyCodeLine{877 \textcolor{comment}{// (but not the address) is printed; for a (const) char pointer, the}}
+\DoxyCodeLine{878 \textcolor{comment}{// NUL-\/terminated string (but not the pointer) is printed.}}
+\DoxyCodeLine{879 }
+\DoxyCodeLine{880 \textcolor{keyword}{template} <\textcolor{keyword}{typename} T>}
+\DoxyCodeLine{881 \textcolor{keyword}{class }\mbox{\hyperlink{classtesting_1_1internal_1_1UniversalTersePrinter}{UniversalTersePrinter}} \{}
+\DoxyCodeLine{882  \textcolor{keyword}{public}:}
+\DoxyCodeLine{883   \textcolor{keyword}{static} \textcolor{keywordtype}{void} Print(\textcolor{keyword}{const} T\& value, ::std::ostream* os) \{}
+\DoxyCodeLine{884     UniversalPrint(value, os);}
+\DoxyCodeLine{885   \}}
+\DoxyCodeLine{886 \};}
+\DoxyCodeLine{887 \textcolor{keyword}{template} <\textcolor{keyword}{typename} T>}
+\DoxyCodeLine{888 \textcolor{keyword}{class }\mbox{\hyperlink{classtesting_1_1internal_1_1UniversalTersePrinter}{UniversalTersePrinter}}<T\&> \{}
+\DoxyCodeLine{889  \textcolor{keyword}{public}:}
+\DoxyCodeLine{890   \textcolor{keyword}{static} \textcolor{keywordtype}{void} Print(\textcolor{keyword}{const} T\& value, ::std::ostream* os) \{}
+\DoxyCodeLine{891     UniversalPrint(value, os);}
+\DoxyCodeLine{892   \}}
+\DoxyCodeLine{893 \};}
+\DoxyCodeLine{894 \textcolor{keyword}{template} <\textcolor{keyword}{typename} T, \textcolor{keywordtype}{size\_t} N>}
+\DoxyCodeLine{895 \textcolor{keyword}{class }\mbox{\hyperlink{classtesting_1_1internal_1_1UniversalTersePrinter}{UniversalTersePrinter}}<T[N]> \{}
+\DoxyCodeLine{896  \textcolor{keyword}{public}:}
+\DoxyCodeLine{897   \textcolor{keyword}{static} \textcolor{keywordtype}{void} Print(\textcolor{keyword}{const} T (\&value)[N], ::std::ostream* os) \{}
+\DoxyCodeLine{898     \mbox{\hyperlink{classtesting_1_1internal_1_1UniversalPrinter}{UniversalPrinter<T[N]>::Print}}(value, os);}
+\DoxyCodeLine{899   \}}
+\DoxyCodeLine{900 \};}
+\DoxyCodeLine{901 \textcolor{keyword}{template} <>}
+\DoxyCodeLine{902 \textcolor{keyword}{class }\mbox{\hyperlink{classtesting_1_1internal_1_1UniversalTersePrinter}{UniversalTersePrinter}}<const char*> \{}
+\DoxyCodeLine{903  \textcolor{keyword}{public}:}
+\DoxyCodeLine{904   \textcolor{keyword}{static} \textcolor{keywordtype}{void} Print(\textcolor{keyword}{const} \textcolor{keywordtype}{char}* str, ::std::ostream* os) \{}
+\DoxyCodeLine{905     \textcolor{keywordflow}{if} (str == \textcolor{keyword}{nullptr}) \{}
+\DoxyCodeLine{906       *os << \textcolor{stringliteral}{"{}NULL"{}};}
+\DoxyCodeLine{907     \} \textcolor{keywordflow}{else} \{}
+\DoxyCodeLine{908       UniversalPrint(std::string(str), os);}
+\DoxyCodeLine{909     \}}
+\DoxyCodeLine{910   \}}
+\DoxyCodeLine{911 \};}
+\DoxyCodeLine{912 \textcolor{keyword}{template} <>}
+\DoxyCodeLine{913 \textcolor{keyword}{class }\mbox{\hyperlink{classtesting_1_1internal_1_1UniversalTersePrinter}{UniversalTersePrinter}}<char*> : \textcolor{keyword}{public} \mbox{\hyperlink{classtesting_1_1internal_1_1UniversalTersePrinter}{UniversalTersePrinter<const char*>}} \{}
+\DoxyCodeLine{914 \};}
+\DoxyCodeLine{915 }
+\DoxyCodeLine{916 \textcolor{preprocessor}{\#ifdef \_\_cpp\_char8\_t}}
+\DoxyCodeLine{917 \textcolor{keyword}{template} <>}
+\DoxyCodeLine{918 \textcolor{keyword}{class }\mbox{\hyperlink{classtesting_1_1internal_1_1UniversalTersePrinter}{UniversalTersePrinter}}<const char8\_t*> \{}
+\DoxyCodeLine{919  \textcolor{keyword}{public}:}
+\DoxyCodeLine{920   \textcolor{keyword}{static} \textcolor{keywordtype}{void} Print(\textcolor{keyword}{const} \textcolor{keywordtype}{char8\_t}* str, ::std::ostream* os) \{}
+\DoxyCodeLine{921     \textcolor{keywordflow}{if} (str == \textcolor{keyword}{nullptr}) \{}
+\DoxyCodeLine{922       *os << \textcolor{stringliteral}{"{}NULL"{}};}
+\DoxyCodeLine{923     \} \textcolor{keywordflow}{else} \{}
+\DoxyCodeLine{924       UniversalPrint(::std::u8string(str), os);}
+\DoxyCodeLine{925     \}}
+\DoxyCodeLine{926   \}}
+\DoxyCodeLine{927 \};}
+\DoxyCodeLine{928 \textcolor{keyword}{template} <>}
+\DoxyCodeLine{929 \textcolor{keyword}{class }UniversalTersePrinter<char8\_t*>}
+\DoxyCodeLine{930     : \textcolor{keyword}{public} UniversalTersePrinter<const char8\_t*> \{\};}
+\DoxyCodeLine{931 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{932 }
+\DoxyCodeLine{933 \textcolor{keyword}{template} <>}
+\DoxyCodeLine{934 \textcolor{keyword}{class }\mbox{\hyperlink{classtesting_1_1internal_1_1UniversalTersePrinter}{UniversalTersePrinter}}<const char16\_t*> \{}
+\DoxyCodeLine{935  \textcolor{keyword}{public}:}
+\DoxyCodeLine{936   \textcolor{keyword}{static} \textcolor{keywordtype}{void} Print(\textcolor{keyword}{const} \textcolor{keywordtype}{char16\_t}* str, ::std::ostream* os) \{}
+\DoxyCodeLine{937     \textcolor{keywordflow}{if} (str == \textcolor{keyword}{nullptr}) \{}
+\DoxyCodeLine{938       *os << \textcolor{stringliteral}{"{}NULL"{}};}
+\DoxyCodeLine{939     \} \textcolor{keywordflow}{else} \{}
+\DoxyCodeLine{940       UniversalPrint(::std::u16string(str), os);}
+\DoxyCodeLine{941     \}}
+\DoxyCodeLine{942   \}}
+\DoxyCodeLine{943 \};}
+\DoxyCodeLine{944 \textcolor{keyword}{template} <>}
+\DoxyCodeLine{945 \textcolor{keyword}{class }\mbox{\hyperlink{classtesting_1_1internal_1_1UniversalTersePrinter}{UniversalTersePrinter}}<char16\_t*>}
+\DoxyCodeLine{946     : \textcolor{keyword}{public} \mbox{\hyperlink{classtesting_1_1internal_1_1UniversalTersePrinter}{UniversalTersePrinter<const char16\_t*>}} \{\};}
+\DoxyCodeLine{947 }
+\DoxyCodeLine{948 \textcolor{keyword}{template} <>}
+\DoxyCodeLine{949 \textcolor{keyword}{class }\mbox{\hyperlink{classtesting_1_1internal_1_1UniversalTersePrinter}{UniversalTersePrinter}}<const char32\_t*> \{}
+\DoxyCodeLine{950  \textcolor{keyword}{public}:}
+\DoxyCodeLine{951   \textcolor{keyword}{static} \textcolor{keywordtype}{void} Print(\textcolor{keyword}{const} \textcolor{keywordtype}{char32\_t}* str, ::std::ostream* os) \{}
+\DoxyCodeLine{952     \textcolor{keywordflow}{if} (str == \textcolor{keyword}{nullptr}) \{}
+\DoxyCodeLine{953       *os << \textcolor{stringliteral}{"{}NULL"{}};}
+\DoxyCodeLine{954     \} \textcolor{keywordflow}{else} \{}
+\DoxyCodeLine{955       UniversalPrint(::std::u32string(str), os);}
+\DoxyCodeLine{956     \}}
+\DoxyCodeLine{957   \}}
+\DoxyCodeLine{958 \};}
+\DoxyCodeLine{959 \textcolor{keyword}{template} <>}
+\DoxyCodeLine{960 \textcolor{keyword}{class }\mbox{\hyperlink{classtesting_1_1internal_1_1UniversalTersePrinter}{UniversalTersePrinter}}<char32\_t*>}
+\DoxyCodeLine{961     : \textcolor{keyword}{public} \mbox{\hyperlink{classtesting_1_1internal_1_1UniversalTersePrinter}{UniversalTersePrinter<const char32\_t*>}} \{\};}
+\DoxyCodeLine{962 }
+\DoxyCodeLine{963 \textcolor{preprocessor}{\#if GTEST\_HAS\_STD\_WSTRING}}
+\DoxyCodeLine{964 \textcolor{keyword}{template} <>}
+\DoxyCodeLine{965 \textcolor{keyword}{class }\mbox{\hyperlink{classtesting_1_1internal_1_1UniversalTersePrinter}{UniversalTersePrinter}}<const wchar\_t*> \{}
+\DoxyCodeLine{966  \textcolor{keyword}{public}:}
+\DoxyCodeLine{967   \textcolor{keyword}{static} \textcolor{keywordtype}{void} Print(\textcolor{keyword}{const} \textcolor{keywordtype}{wchar\_t}* str, ::std::ostream* os) \{}
+\DoxyCodeLine{968     \textcolor{keywordflow}{if} (str == \textcolor{keyword}{nullptr}) \{}
+\DoxyCodeLine{969       *os << \textcolor{stringliteral}{"{}NULL"{}};}
+\DoxyCodeLine{970     \} \textcolor{keywordflow}{else} \{}
+\DoxyCodeLine{971       UniversalPrint(::std::wstring(str), os);}
+\DoxyCodeLine{972     \}}
+\DoxyCodeLine{973   \}}
+\DoxyCodeLine{974 \};}
+\DoxyCodeLine{975 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{976 }
+\DoxyCodeLine{977 \textcolor{keyword}{template} <>}
+\DoxyCodeLine{978 \textcolor{keyword}{class }\mbox{\hyperlink{classtesting_1_1internal_1_1UniversalTersePrinter}{UniversalTersePrinter}}<wchar\_t*> \{}
+\DoxyCodeLine{979  \textcolor{keyword}{public}:}
+\DoxyCodeLine{980   \textcolor{keyword}{static} \textcolor{keywordtype}{void} Print(\textcolor{keywordtype}{wchar\_t}* str, ::std::ostream* os) \{}
+\DoxyCodeLine{981     \mbox{\hyperlink{classtesting_1_1internal_1_1UniversalTersePrinter}{UniversalTersePrinter<const wchar\_t*>::Print}}(str, os);}
+\DoxyCodeLine{982   \}}
+\DoxyCodeLine{983 \};}
+\DoxyCodeLine{984 }
+\DoxyCodeLine{985 \textcolor{keyword}{template} <\textcolor{keyword}{typename} T>}
+\DoxyCodeLine{986 \textcolor{keywordtype}{void} UniversalTersePrint(\textcolor{keyword}{const} T\& value, ::std::ostream* os) \{}
+\DoxyCodeLine{987   \mbox{\hyperlink{classtesting_1_1internal_1_1UniversalTersePrinter}{UniversalTersePrinter<T>::Print}}(value, os);}
+\DoxyCodeLine{988 \}}
+\DoxyCodeLine{989 }
+\DoxyCodeLine{990 \textcolor{comment}{// Prints a value using the type inferred by the compiler.  The}}
+\DoxyCodeLine{991 \textcolor{comment}{// difference between this and UniversalTersePrint() is that for a}}
+\DoxyCodeLine{992 \textcolor{comment}{// (const) char pointer, this prints both the pointer and the}}
+\DoxyCodeLine{993 \textcolor{comment}{// NUL-\/terminated string.}}
+\DoxyCodeLine{994 \textcolor{keyword}{template} <\textcolor{keyword}{typename} T>}
+\DoxyCodeLine{995 \textcolor{keywordtype}{void} UniversalPrint(\textcolor{keyword}{const} T\& value, ::std::ostream* os) \{}
+\DoxyCodeLine{996   \textcolor{comment}{// A workarond for the bug in VC++ 7.1 that prevents us from instantiating}}
+\DoxyCodeLine{997   \textcolor{comment}{// UniversalPrinter with T directly.}}
+\DoxyCodeLine{998   \textcolor{keyword}{typedef} T T1;}
+\DoxyCodeLine{999   UniversalPrinter<T1>::Print(value, os);}
+\DoxyCodeLine{1000 \}}
+\DoxyCodeLine{1001 }
+\DoxyCodeLine{1002 typedef ::std::vector<::std::string> Strings;}
+\DoxyCodeLine{1003 }
+\DoxyCodeLine{1004 \textcolor{comment}{// Tersely prints the first N fields of a tuple to a string vector,}}
+\DoxyCodeLine{1005 \textcolor{comment}{// one element for each field.}}
+\DoxyCodeLine{1006 \textcolor{keyword}{template} <\textcolor{keyword}{typename} Tuple>}
+\DoxyCodeLine{1007 \textcolor{keywordtype}{void} TersePrintPrefixToStrings(\textcolor{keyword}{const} Tuple\&, std::integral\_constant<size\_t, 0>,}
+\DoxyCodeLine{1008                                Strings*) \{\}}
+\DoxyCodeLine{1009 \textcolor{keyword}{template} <\textcolor{keyword}{typename} Tuple, \textcolor{keywordtype}{size\_t} I>}
+\DoxyCodeLine{1010 \textcolor{keywordtype}{void} TersePrintPrefixToStrings(\textcolor{keyword}{const} Tuple\& t,}
+\DoxyCodeLine{1011                                std::integral\_constant<size\_t, I>,}
+\DoxyCodeLine{1012                                Strings* strings) \{}
+\DoxyCodeLine{1013   TersePrintPrefixToStrings(t, std::integral\_constant<size\_t, I -\/ 1>(),}
+\DoxyCodeLine{1014                             strings);}
+\DoxyCodeLine{1015   ::std::stringstream ss;}
+\DoxyCodeLine{1016   UniversalTersePrint(std::get<I -\/ 1>(t), \&ss);}
+\DoxyCodeLine{1017   strings-\/>push\_back(ss.str());}
+\DoxyCodeLine{1018 \}}
+\DoxyCodeLine{1019 }
+\DoxyCodeLine{1020 \textcolor{comment}{// Prints the fields of a tuple tersely to a string vector, one}}
+\DoxyCodeLine{1021 \textcolor{comment}{// element for each field.  See the comment before}}
+\DoxyCodeLine{1022 \textcolor{comment}{// UniversalTersePrint() for how we define "{}tersely"{}.}}
+\DoxyCodeLine{1023 \textcolor{keyword}{template} <\textcolor{keyword}{typename} Tuple>}
+\DoxyCodeLine{1024 Strings UniversalTersePrintTupleFieldsToStrings(\textcolor{keyword}{const} Tuple\& value) \{}
+\DoxyCodeLine{1025   Strings result;}
+\DoxyCodeLine{1026   TersePrintPrefixToStrings(}
+\DoxyCodeLine{1027       value, std::integral\_constant<\textcolor{keywordtype}{size\_t}, std::tuple\_size<Tuple>::value>(),}
+\DoxyCodeLine{1028       \&result);}
+\DoxyCodeLine{1029   \textcolor{keywordflow}{return} result;}
+\DoxyCodeLine{1030 \}}
+\DoxyCodeLine{1031 }
+\DoxyCodeLine{1032 \}  \textcolor{comment}{// namespace internal}}
+\DoxyCodeLine{1033 }
+\DoxyCodeLine{1034 \textcolor{keyword}{template} <\textcolor{keyword}{typename} T>}
+\DoxyCodeLine{1035 ::std::string PrintToString(\textcolor{keyword}{const} T\& value) \{}
+\DoxyCodeLine{1036   ::std::stringstream ss;}
+\DoxyCodeLine{1037   internal::UniversalTersePrinter<T>::Print(value, \&ss);}
+\DoxyCodeLine{1038   \textcolor{keywordflow}{return} ss.str();}
+\DoxyCodeLine{1039 \}}
+\DoxyCodeLine{1040 }
+\DoxyCodeLine{1041 \}  \textcolor{comment}{// namespace testing}}
+\DoxyCodeLine{1042 }
+\DoxyCodeLine{1043 \textcolor{comment}{// Include any custom printer added by the local installation.}}
+\DoxyCodeLine{1044 \textcolor{comment}{// We must include this header at the end to make sure it can use the}}
+\DoxyCodeLine{1045 \textcolor{comment}{// declarations from this file.}}
+\DoxyCodeLine{1046 \textcolor{preprocessor}{\#include "{}gtest/internal/custom/gtest-\/printers.h"{}}}
+\DoxyCodeLine{1047 }
+\DoxyCodeLine{1048 \textcolor{preprocessor}{\#endif  }\textcolor{comment}{// GOOGLETEST\_INCLUDE\_GTEST\_GTEST\_PRINTERS\_H\_}}
+
+\end{DoxyCode}

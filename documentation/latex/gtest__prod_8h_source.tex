@@ -1,0 +1,66 @@
+\hypertarget{gtest__prod_8h_source}{}\doxysection{gtest\+\_\+prod.\+h}
+\label{gtest__prod_8h_source}\index{build/\_deps/googletest-\/src/googletest/include/gtest/gtest\_prod.h@{build/\_deps/googletest-\/src/googletest/include/gtest/gtest\_prod.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{comment}{// Copyright 2006, Google Inc.}}
+\DoxyCodeLine{2 \textcolor{comment}{// All rights reserved.}}
+\DoxyCodeLine{3 \textcolor{comment}{//}}
+\DoxyCodeLine{4 \textcolor{comment}{// Redistribution and use in source and binary forms, with or without}}
+\DoxyCodeLine{5 \textcolor{comment}{// modification, are permitted provided that the following conditions are}}
+\DoxyCodeLine{6 \textcolor{comment}{// met:}}
+\DoxyCodeLine{7 \textcolor{comment}{//}}
+\DoxyCodeLine{8 \textcolor{comment}{//     * Redistributions of source code must retain the above copyright}}
+\DoxyCodeLine{9 \textcolor{comment}{// notice, this list of conditions and the following disclaimer.}}
+\DoxyCodeLine{10 \textcolor{comment}{//     * Redistributions in binary form must reproduce the above}}
+\DoxyCodeLine{11 \textcolor{comment}{// copyright notice, this list of conditions and the following disclaimer}}
+\DoxyCodeLine{12 \textcolor{comment}{// in the documentation and/or other materials provided with the}}
+\DoxyCodeLine{13 \textcolor{comment}{// distribution.}}
+\DoxyCodeLine{14 \textcolor{comment}{//     * Neither the name of Google Inc. nor the names of its}}
+\DoxyCodeLine{15 \textcolor{comment}{// contributors may be used to endorse or promote products derived from}}
+\DoxyCodeLine{16 \textcolor{comment}{// this software without specific prior written permission.}}
+\DoxyCodeLine{17 \textcolor{comment}{//}}
+\DoxyCodeLine{18 \textcolor{comment}{// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS}}
+\DoxyCodeLine{19 \textcolor{comment}{// "{}AS IS"{} AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT}}
+\DoxyCodeLine{20 \textcolor{comment}{// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR}}
+\DoxyCodeLine{21 \textcolor{comment}{// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT}}
+\DoxyCodeLine{22 \textcolor{comment}{// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,}}
+\DoxyCodeLine{23 \textcolor{comment}{// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT}}
+\DoxyCodeLine{24 \textcolor{comment}{// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,}}
+\DoxyCodeLine{25 \textcolor{comment}{// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY}}
+\DoxyCodeLine{26 \textcolor{comment}{// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT}}
+\DoxyCodeLine{27 \textcolor{comment}{// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE}}
+\DoxyCodeLine{28 \textcolor{comment}{// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.}}
+\DoxyCodeLine{29 }
+\DoxyCodeLine{30 \textcolor{comment}{// Google C++ Testing and Mocking Framework definitions useful in production}}
+\DoxyCodeLine{31 \textcolor{comment}{// code.}}
+\DoxyCodeLine{32 }
+\DoxyCodeLine{33 \textcolor{preprocessor}{\#ifndef GOOGLETEST\_INCLUDE\_GTEST\_GTEST\_PROD\_H\_}}
+\DoxyCodeLine{34 \textcolor{preprocessor}{\#define GOOGLETEST\_INCLUDE\_GTEST\_GTEST\_PROD\_H\_}}
+\DoxyCodeLine{35 }
+\DoxyCodeLine{36 \textcolor{comment}{// When you need to test the private or protected members of a class,}}
+\DoxyCodeLine{37 \textcolor{comment}{// use the FRIEND\_TEST macro to declare your tests as friends of the}}
+\DoxyCodeLine{38 \textcolor{comment}{// class.  For example:}}
+\DoxyCodeLine{39 \textcolor{comment}{//}}
+\DoxyCodeLine{40 \textcolor{comment}{// class MyClass \{}}
+\DoxyCodeLine{41 \textcolor{comment}{//  private:}}
+\DoxyCodeLine{42 \textcolor{comment}{//   void PrivateMethod();}}
+\DoxyCodeLine{43 \textcolor{comment}{//   FRIEND\_TEST(MyClassTest, PrivateMethodWorks);}}
+\DoxyCodeLine{44 \textcolor{comment}{// \};}}
+\DoxyCodeLine{45 \textcolor{comment}{//}}
+\DoxyCodeLine{46 \textcolor{comment}{// class MyClassTest : public testing::Test \{}}
+\DoxyCodeLine{47 \textcolor{comment}{//   // ...}}
+\DoxyCodeLine{48 \textcolor{comment}{// \};}}
+\DoxyCodeLine{49 \textcolor{comment}{//}}
+\DoxyCodeLine{50 \textcolor{comment}{// TEST\_F(MyClassTest, PrivateMethodWorks) \{}}
+\DoxyCodeLine{51 \textcolor{comment}{//   // Can call MyClass::PrivateMethod() here.}}
+\DoxyCodeLine{52 \textcolor{comment}{// \}}}
+\DoxyCodeLine{53 \textcolor{comment}{//}}
+\DoxyCodeLine{54 \textcolor{comment}{// Note: The test class must be in the same namespace as the class being tested.}}
+\DoxyCodeLine{55 \textcolor{comment}{// For example, putting MyClassTest in an anonymous namespace will not work.}}
+\DoxyCodeLine{56 }
+\DoxyCodeLine{57 \textcolor{preprocessor}{\#define FRIEND\_TEST(test\_case\_name, test\_name) \(\backslash\)}}
+\DoxyCodeLine{58 \textcolor{preprocessor}{  friend class test\_case\_name\#\#\_\#\#test\_name\#\#\_Test}}
+\DoxyCodeLine{59 }
+\DoxyCodeLine{60 \textcolor{preprocessor}{\#endif  }\textcolor{comment}{// GOOGLETEST\_INCLUDE\_GTEST\_GTEST\_PROD\_H\_}}
+
+\end{DoxyCode}

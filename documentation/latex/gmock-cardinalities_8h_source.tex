@@ -1,0 +1,165 @@
+\hypertarget{gmock-cardinalities_8h_source}{}\doxysection{gmock-\/cardinalities.h}
+\label{gmock-cardinalities_8h_source}\index{build/\_deps/googletest-\/src/googlemock/include/gmock/gmock-\/cardinalities.h@{build/\_deps/googletest-\/src/googlemock/include/gmock/gmock-\/cardinalities.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{comment}{// Copyright 2007, Google Inc.}}
+\DoxyCodeLine{2 \textcolor{comment}{// All rights reserved.}}
+\DoxyCodeLine{3 \textcolor{comment}{//}}
+\DoxyCodeLine{4 \textcolor{comment}{// Redistribution and use in source and binary forms, with or without}}
+\DoxyCodeLine{5 \textcolor{comment}{// modification, are permitted provided that the following conditions are}}
+\DoxyCodeLine{6 \textcolor{comment}{// met:}}
+\DoxyCodeLine{7 \textcolor{comment}{//}}
+\DoxyCodeLine{8 \textcolor{comment}{//     * Redistributions of source code must retain the above copyright}}
+\DoxyCodeLine{9 \textcolor{comment}{// notice, this list of conditions and the following disclaimer.}}
+\DoxyCodeLine{10 \textcolor{comment}{//     * Redistributions in binary form must reproduce the above}}
+\DoxyCodeLine{11 \textcolor{comment}{// copyright notice, this list of conditions and the following disclaimer}}
+\DoxyCodeLine{12 \textcolor{comment}{// in the documentation and/or other materials provided with the}}
+\DoxyCodeLine{13 \textcolor{comment}{// distribution.}}
+\DoxyCodeLine{14 \textcolor{comment}{//     * Neither the name of Google Inc. nor the names of its}}
+\DoxyCodeLine{15 \textcolor{comment}{// contributors may be used to endorse or promote products derived from}}
+\DoxyCodeLine{16 \textcolor{comment}{// this software without specific prior written permission.}}
+\DoxyCodeLine{17 \textcolor{comment}{//}}
+\DoxyCodeLine{18 \textcolor{comment}{// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS}}
+\DoxyCodeLine{19 \textcolor{comment}{// "{}AS IS"{} AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT}}
+\DoxyCodeLine{20 \textcolor{comment}{// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR}}
+\DoxyCodeLine{21 \textcolor{comment}{// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT}}
+\DoxyCodeLine{22 \textcolor{comment}{// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,}}
+\DoxyCodeLine{23 \textcolor{comment}{// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT}}
+\DoxyCodeLine{24 \textcolor{comment}{// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,}}
+\DoxyCodeLine{25 \textcolor{comment}{// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY}}
+\DoxyCodeLine{26 \textcolor{comment}{// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT}}
+\DoxyCodeLine{27 \textcolor{comment}{// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE}}
+\DoxyCodeLine{28 \textcolor{comment}{// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.}}
+\DoxyCodeLine{29 }
+\DoxyCodeLine{30 \textcolor{comment}{// Google Mock -\/ a framework for writing C++ mock classes.}}
+\DoxyCodeLine{31 \textcolor{comment}{//}}
+\DoxyCodeLine{32 \textcolor{comment}{// This file implements some commonly used cardinalities.  More}}
+\DoxyCodeLine{33 \textcolor{comment}{// cardinalities can be defined by the user implementing the}}
+\DoxyCodeLine{34 \textcolor{comment}{// CardinalityInterface interface if necessary.}}
+\DoxyCodeLine{35 }
+\DoxyCodeLine{36 \textcolor{comment}{// IWYU pragma: private, include "{}gmock/gmock.h"{}}}
+\DoxyCodeLine{37 \textcolor{comment}{// IWYU pragma: friend gmock/.*}}
+\DoxyCodeLine{38 }
+\DoxyCodeLine{39 \textcolor{preprocessor}{\#ifndef GOOGLEMOCK\_INCLUDE\_GMOCK\_GMOCK\_CARDINALITIES\_H\_}}
+\DoxyCodeLine{40 \textcolor{preprocessor}{\#define GOOGLEMOCK\_INCLUDE\_GMOCK\_GMOCK\_CARDINALITIES\_H\_}}
+\DoxyCodeLine{41 }
+\DoxyCodeLine{42 \textcolor{preprocessor}{\#include <limits.h>}}
+\DoxyCodeLine{43 }
+\DoxyCodeLine{44 \textcolor{preprocessor}{\#include <memory>}}
+\DoxyCodeLine{45 \textcolor{preprocessor}{\#include <ostream>}  \textcolor{comment}{// NOLINT}}
+\DoxyCodeLine{46 }
+\DoxyCodeLine{47 \textcolor{preprocessor}{\#include "{}gmock/internal/gmock-\/port.h"{}}}
+\DoxyCodeLine{48 \textcolor{preprocessor}{\#include "{}gtest/gtest.h"{}}}
+\DoxyCodeLine{49 }
+\DoxyCodeLine{50 GTEST\_DISABLE\_MSC\_WARNINGS\_PUSH\_(4251 \(\backslash\)}
+\DoxyCodeLine{51 \textcolor{comment}{/* class A needs to have dll-\/interface to be used by clients of class B */})}
+\DoxyCodeLine{52 }
+\DoxyCodeLine{53 namespace testing \{}
+\DoxyCodeLine{54 }
+\DoxyCodeLine{55 \textcolor{comment}{// To implement a cardinality Foo, define:}}
+\DoxyCodeLine{56 \textcolor{comment}{//   1. a class FooCardinality that implements the}}
+\DoxyCodeLine{57 \textcolor{comment}{//      CardinalityInterface interface, and}}
+\DoxyCodeLine{58 \textcolor{comment}{//   2. a factory function that creates a Cardinality object from a}}
+\DoxyCodeLine{59 \textcolor{comment}{//      const FooCardinality*.}}
+\DoxyCodeLine{60 \textcolor{comment}{//}}
+\DoxyCodeLine{61 \textcolor{comment}{// The two-\/level delegation design follows that of Matcher, providing}}
+\DoxyCodeLine{62 \textcolor{comment}{// consistency for extension developers.  It also eases ownership}}
+\DoxyCodeLine{63 \textcolor{comment}{// management as Cardinality objects can now be copied like plain values.}}
+\DoxyCodeLine{64 }
+\DoxyCodeLine{65 \textcolor{comment}{// The implementation of a cardinality.}}
+\DoxyCodeLine{66 \textcolor{keyword}{class }CardinalityInterface \{}
+\DoxyCodeLine{67  \textcolor{keyword}{public}:}
+\DoxyCodeLine{68   \textcolor{keyword}{virtual} \string~CardinalityInterface() \{\}}
+\DoxyCodeLine{69 }
+\DoxyCodeLine{70   \textcolor{comment}{// Conservative estimate on the lower/upper bound of the number of}}
+\DoxyCodeLine{71   \textcolor{comment}{// calls allowed.}}
+\DoxyCodeLine{72   \textcolor{keyword}{virtual} \textcolor{keywordtype}{int} ConservativeLowerBound()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} 0; \}}
+\DoxyCodeLine{73   \textcolor{keyword}{virtual} \textcolor{keywordtype}{int} ConservativeUpperBound()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} INT\_MAX; \}}
+\DoxyCodeLine{74 }
+\DoxyCodeLine{75   \textcolor{comment}{// Returns true if and only if call\_count calls will satisfy this}}
+\DoxyCodeLine{76   \textcolor{comment}{// cardinality.}}
+\DoxyCodeLine{77   \textcolor{keyword}{virtual} \textcolor{keywordtype}{bool} IsSatisfiedByCallCount(\textcolor{keywordtype}{int} call\_count) \textcolor{keyword}{const} = 0;}
+\DoxyCodeLine{78 }
+\DoxyCodeLine{79   \textcolor{comment}{// Returns true if and only if call\_count calls will saturate this}}
+\DoxyCodeLine{80   \textcolor{comment}{// cardinality.}}
+\DoxyCodeLine{81   \textcolor{keyword}{virtual} \textcolor{keywordtype}{bool} IsSaturatedByCallCount(\textcolor{keywordtype}{int} call\_count) \textcolor{keyword}{const} = 0;}
+\DoxyCodeLine{82 }
+\DoxyCodeLine{83   \textcolor{comment}{// Describes self to an ostream.}}
+\DoxyCodeLine{84   \textcolor{keyword}{virtual} \textcolor{keywordtype}{void} DescribeTo(::std::ostream* os) \textcolor{keyword}{const} = 0;}
+\DoxyCodeLine{85 \};}
+\DoxyCodeLine{86 }
+\DoxyCodeLine{87 \textcolor{comment}{// A Cardinality is a copyable and IMMUTABLE (except by assignment)}}
+\DoxyCodeLine{88 \textcolor{comment}{// object that specifies how many times a mock function is expected to}}
+\DoxyCodeLine{89 \textcolor{comment}{// be called.  The implementation of Cardinality is just a std::shared\_ptr}}
+\DoxyCodeLine{90 \textcolor{comment}{// to const CardinalityInterface. Don't inherit from Cardinality!}}
+\DoxyCodeLine{91 \textcolor{keyword}{class }GTEST\_API\_ Cardinality \{}
+\DoxyCodeLine{92  \textcolor{keyword}{public}:}
+\DoxyCodeLine{93   \textcolor{comment}{// Constructs a null cardinality.  Needed for storing Cardinality}}
+\DoxyCodeLine{94   \textcolor{comment}{// objects in STL containers.}}
+\DoxyCodeLine{95   Cardinality() \{\}}
+\DoxyCodeLine{96 }
+\DoxyCodeLine{97   \textcolor{comment}{// Constructs a Cardinality from its implementation.}}
+\DoxyCodeLine{98   \textcolor{keyword}{explicit} Cardinality(\textcolor{keyword}{const} CardinalityInterface* impl) : impl\_(impl) \{\}}
+\DoxyCodeLine{99 }
+\DoxyCodeLine{100   \textcolor{comment}{// Conservative estimate on the lower/upper bound of the number of}}
+\DoxyCodeLine{101   \textcolor{comment}{// calls allowed.}}
+\DoxyCodeLine{102   \textcolor{keywordtype}{int} ConservativeLowerBound()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} impl\_-\/>ConservativeLowerBound(); \}}
+\DoxyCodeLine{103   \textcolor{keywordtype}{int} ConservativeUpperBound()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} impl\_-\/>ConservativeUpperBound(); \}}
+\DoxyCodeLine{104 }
+\DoxyCodeLine{105   \textcolor{comment}{// Returns true if and only if call\_count calls will satisfy this}}
+\DoxyCodeLine{106   \textcolor{comment}{// cardinality.}}
+\DoxyCodeLine{107   \textcolor{keywordtype}{bool} IsSatisfiedByCallCount(\textcolor{keywordtype}{int} call\_count)\textcolor{keyword}{ const }\{}
+\DoxyCodeLine{108     \textcolor{keywordflow}{return} impl\_-\/>IsSatisfiedByCallCount(call\_count);}
+\DoxyCodeLine{109   \}}
+\DoxyCodeLine{110 }
+\DoxyCodeLine{111   \textcolor{comment}{// Returns true if and only if call\_count calls will saturate this}}
+\DoxyCodeLine{112   \textcolor{comment}{// cardinality.}}
+\DoxyCodeLine{113   \textcolor{keywordtype}{bool} IsSaturatedByCallCount(\textcolor{keywordtype}{int} call\_count)\textcolor{keyword}{ const }\{}
+\DoxyCodeLine{114     \textcolor{keywordflow}{return} impl\_-\/>IsSaturatedByCallCount(call\_count);}
+\DoxyCodeLine{115   \}}
+\DoxyCodeLine{116 }
+\DoxyCodeLine{117   \textcolor{comment}{// Returns true if and only if call\_count calls will over-\/saturate this}}
+\DoxyCodeLine{118   \textcolor{comment}{// cardinality, i.e. exceed the maximum number of allowed calls.}}
+\DoxyCodeLine{119   \textcolor{keywordtype}{bool} IsOverSaturatedByCallCount(\textcolor{keywordtype}{int} call\_count)\textcolor{keyword}{ const }\{}
+\DoxyCodeLine{120     \textcolor{keywordflow}{return} impl\_-\/>IsSaturatedByCallCount(call\_count) \&\&}
+\DoxyCodeLine{121            !impl\_-\/>IsSatisfiedByCallCount(call\_count);}
+\DoxyCodeLine{122   \}}
+\DoxyCodeLine{123 }
+\DoxyCodeLine{124   \textcolor{comment}{// Describes self to an ostream}}
+\DoxyCodeLine{125   \textcolor{keywordtype}{void} DescribeTo(::std::ostream* os)\textcolor{keyword}{ const }\{ impl\_-\/>DescribeTo(os); \}}
+\DoxyCodeLine{126 }
+\DoxyCodeLine{127   \textcolor{comment}{// Describes the given actual call count to an ostream.}}
+\DoxyCodeLine{128   \textcolor{keyword}{static} \textcolor{keywordtype}{void} DescribeActualCallCountTo(\textcolor{keywordtype}{int} actual\_call\_count,}
+\DoxyCodeLine{129                                         ::std::ostream* os);}
+\DoxyCodeLine{130 }
+\DoxyCodeLine{131  \textcolor{keyword}{private}:}
+\DoxyCodeLine{132   std::shared\_ptr<const CardinalityInterface> impl\_;}
+\DoxyCodeLine{133 \};}
+\DoxyCodeLine{134 }
+\DoxyCodeLine{135 \textcolor{comment}{// Creates a cardinality that allows at least n calls.}}
+\DoxyCodeLine{136 GTEST\_API\_ Cardinality AtLeast(\textcolor{keywordtype}{int} n);}
+\DoxyCodeLine{137 }
+\DoxyCodeLine{138 \textcolor{comment}{// Creates a cardinality that allows at most n calls.}}
+\DoxyCodeLine{139 GTEST\_API\_ Cardinality AtMost(\textcolor{keywordtype}{int} n);}
+\DoxyCodeLine{140 }
+\DoxyCodeLine{141 \textcolor{comment}{// Creates a cardinality that allows any number of calls.}}
+\DoxyCodeLine{142 GTEST\_API\_ Cardinality AnyNumber();}
+\DoxyCodeLine{143 }
+\DoxyCodeLine{144 \textcolor{comment}{// Creates a cardinality that allows between min and max calls.}}
+\DoxyCodeLine{145 GTEST\_API\_ Cardinality Between(\textcolor{keywordtype}{int} min, \textcolor{keywordtype}{int} max);}
+\DoxyCodeLine{146 }
+\DoxyCodeLine{147 \textcolor{comment}{// Creates a cardinality that allows exactly n calls.}}
+\DoxyCodeLine{148 GTEST\_API\_ Cardinality Exactly(\textcolor{keywordtype}{int} n);}
+\DoxyCodeLine{149 }
+\DoxyCodeLine{150 \textcolor{comment}{// Creates a cardinality from its implementation.}}
+\DoxyCodeLine{151 \textcolor{keyword}{inline} Cardinality MakeCardinality(\textcolor{keyword}{const} CardinalityInterface* c) \{}
+\DoxyCodeLine{152   \textcolor{keywordflow}{return} Cardinality(c);}
+\DoxyCodeLine{153 \}}
+\DoxyCodeLine{154 }
+\DoxyCodeLine{155 \}  \textcolor{comment}{// namespace testing}}
+\DoxyCodeLine{156 }
+\DoxyCodeLine{157 GTEST\_DISABLE\_MSC\_WARNINGS\_POP\_()  \textcolor{comment}{//  4251}}
+\DoxyCodeLine{158 }
+\DoxyCodeLine{159 \textcolor{preprocessor}{\#endif  }\textcolor{comment}{// GOOGLEMOCK\_INCLUDE\_GMOCK\_GMOCK\_CARDINALITIES\_H\_}}
+
+\end{DoxyCode}

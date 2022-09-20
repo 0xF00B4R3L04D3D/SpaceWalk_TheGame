@@ -1,0 +1,103 @@
+\hypertarget{engine_8hpp_source}{}\doxysection{engine.\+hpp}
+\label{engine_8hpp_source}\index{src/engine.hpp@{src/engine.hpp}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{preprocessor}{\#ifndef ENGINE}}
+\DoxyCodeLine{2 \textcolor{preprocessor}{\#define ENGINE}}
+\DoxyCodeLine{3 \textcolor{comment}{/* Game will be built like a linked list and a graph(tree). */}}
+\DoxyCodeLine{4 \textcolor{preprocessor}{\#include <vector>}}
+\DoxyCodeLine{5 \textcolor{preprocessor}{\#include <memory>}}
+\DoxyCodeLine{6 \textcolor{preprocessor}{\#include <string>}}
+\DoxyCodeLine{7 \textcolor{preprocessor}{\#include <map>}}
+\DoxyCodeLine{8 \textcolor{preprocessor}{\#include "{}tinyxml2.h"{}}}
+\DoxyCodeLine{9 }
+\DoxyCodeLine{10 \textcolor{keyword}{class }\mbox{\hyperlink{classWorld}{World}};}
+\DoxyCodeLine{11 \textcolor{keyword}{class }\mbox{\hyperlink{classObject}{Object}};}
+\DoxyCodeLine{12 \textcolor{keyword}{class }\mbox{\hyperlink{classRoom}{Room}};}
+\DoxyCodeLine{13 \textcolor{keyword}{class }\mbox{\hyperlink{classEntity}{Entity}};}
+\DoxyCodeLine{14 \textcolor{keyword}{class }Mission;}
+\DoxyCodeLine{15 \textcolor{keyword}{class }Choice;}
+\DoxyCodeLine{16 }
+\DoxyCodeLine{21 \textcolor{keyword}{typedef} std::shared\_ptr<Room> node;}
+\DoxyCodeLine{26 \textcolor{keyword}{typedef} std::unique\_ptr<Object> item;}
+\DoxyCodeLine{31 \textcolor{keyword}{typedef} std::shared\_ptr<Entity> ent;}
+\DoxyCodeLine{36 \textcolor{keyword}{typedef} std::vector<node> nodes;}
+\DoxyCodeLine{41 \textcolor{keyword}{typedef} std::vector<item> items;}
+\DoxyCodeLine{46 \textcolor{keyword}{typedef} std::vector<ent> entities;}
+\DoxyCodeLine{47 }
+\DoxyCodeLine{52 \textcolor{keyword}{class }\mbox{\hyperlink{classEntity}{Entity}} \{}
+\DoxyCodeLine{53     std::string name;}
+\DoxyCodeLine{54     \textcolor{keywordtype}{int} hp;}
+\DoxyCodeLine{55     \textcolor{keywordtype}{int} stamina;}
+\DoxyCodeLine{56 \};}
+\DoxyCodeLine{57 }
+\DoxyCodeLine{63 \textcolor{keyword}{class }\mbox{\hyperlink{classRoom}{Room}} \{}
+\DoxyCodeLine{64     nodes neighbours; \textcolor{comment}{// Neighbouring rooms.}}
+\DoxyCodeLine{65     \textcolor{keyword}{const} std::string roomName; \textcolor{comment}{// Name of the room.}}
+\DoxyCodeLine{66     \textcolor{keyword}{const} \textcolor{keywordtype}{int} roomID; \textcolor{comment}{// ID of the room, that connects a key to this room.}}
+\DoxyCodeLine{67     items inventory; \textcolor{comment}{// Items, that can be found in the room.}}
+\DoxyCodeLine{68     \textcolor{keyword}{const} std::string description; \textcolor{comment}{// Description of the room.}}
+\DoxyCodeLine{69 \textcolor{keyword}{public}:}
+\DoxyCodeLine{77     \mbox{\hyperlink{classRoom_a6444c5cbd53d2120b05a75850ea404cf}{Room}}(\textcolor{keyword}{const} std::string\& n, \textcolor{keywordtype}{int} \textcolor{keywordtype}{id}, \textcolor{keyword}{const} std::string\& desc) : roomName(n), roomID(id), description(desc) \{\}}
+\DoxyCodeLine{83     std::string \mbox{\hyperlink{classRoom_a767de198f529425dd4ba81810e44d6e4}{getName}}()\textcolor{keyword}{ const }\{\textcolor{keywordflow}{return} roomName;\}}
+\DoxyCodeLine{89     \textcolor{keywordtype}{int} \mbox{\hyperlink{classRoom_aa6f8e73b0570d7cc208189ebf79b9042}{getID}}()\textcolor{keyword}{ const }\{\textcolor{keywordflow}{return} roomID;\}}
+\DoxyCodeLine{95     std::string \mbox{\hyperlink{classRoom_a33c1c0ac8a2e43da7b59522175811d63}{getDescription}}()\textcolor{keyword}{ const }\{\textcolor{keywordflow}{return} description;\}}
+\DoxyCodeLine{101     nodes \mbox{\hyperlink{classRoom_a95bd4e1f1a2d7971cd6917f1eae145e8}{getNeighbours}}()\textcolor{keyword}{ const }\{\textcolor{keywordflow}{return} neighbours;\}   }
+\DoxyCodeLine{108     \mbox{\hyperlink{classRoom}{Room}}\& \mbox{\hyperlink{classRoom_a3e2b4acf74611dab017b41303a9e65a0}{addNeighbour}}(node\& nn) \{}
+\DoxyCodeLine{109         neighbours.push\_back(node(nn));}
+\DoxyCodeLine{110         \textcolor{keywordflow}{return} *\textcolor{keyword}{this};}
+\DoxyCodeLine{111     \}}
+\DoxyCodeLine{118     \mbox{\hyperlink{classRoom}{Room}}\& \mbox{\hyperlink{classRoom_adbf499e9a38b3a8d48d2f3bd11ebaa0f}{addNeighbours}}(nodes\& ns) \{}
+\DoxyCodeLine{119         \textcolor{keywordflow}{for} (nodes::const\_iterator it = ns.cbegin(); it != ns.cend(); it++) \{}
+\DoxyCodeLine{120             neighbours.push\_back(node(*it));}
+\DoxyCodeLine{121         \}}
+\DoxyCodeLine{122         \textcolor{keywordflow}{return} *\textcolor{keyword}{this};}
+\DoxyCodeLine{123     \}}
+\DoxyCodeLine{129     items \textcolor{keyword}{const}\& \mbox{\hyperlink{classRoom_aad29b602e7f98596a96078471b9c2db8}{getItems}}() \{\textcolor{keywordflow}{return} inventory;\} }
+\DoxyCodeLine{136     \mbox{\hyperlink{classRoom}{Room}}\& \mbox{\hyperlink{classRoom_a2a53e91b4f576003f4aa357dfc9a1d70}{addItem}}(item\& i) \{}
+\DoxyCodeLine{137         inventory.push\_back(item(std::move(i)));}
+\DoxyCodeLine{138         \textcolor{keywordflow}{return} *\textcolor{keyword}{this};}
+\DoxyCodeLine{139     \}}
+\DoxyCodeLine{146     \mbox{\hyperlink{classRoom}{Room}}\& \mbox{\hyperlink{classRoom_a93d03e0d911cb12e6eaa1e05eddda1b1}{addItems}}(items\& inv) \{}
+\DoxyCodeLine{147         \textcolor{keywordflow}{for} (items::iterator it = inv.begin(); it != inv.end(); it++) \{}
+\DoxyCodeLine{148             inventory.push\_back(item(std::move(*it)));}
+\DoxyCodeLine{149         \}}
+\DoxyCodeLine{150         \textcolor{keywordflow}{return} *\textcolor{keyword}{this};}
+\DoxyCodeLine{151     \}}
+\DoxyCodeLine{157     \mbox{\hyperlink{classRoom_a67d5da09983cc53097807fd43ba5481a}{\string~Room}}() \{}
+\DoxyCodeLine{158         \textcolor{keywordflow}{for} (nodes::iterator nit = neighbours.begin(); nit != neighbours.end(); nit++) \{}
+\DoxyCodeLine{159             nit-\/>reset();}
+\DoxyCodeLine{160         \}}
+\DoxyCodeLine{161         \textcolor{keywordflow}{for} (items::iterator iit = inventory.begin(); iit != inventory.end(); iit++) \{}
+\DoxyCodeLine{162             iit-\/>reset();}
+\DoxyCodeLine{163         \}}
+\DoxyCodeLine{164         std::cerr << \textcolor{stringliteral}{"{}LOG: RoomID: "{}} << roomID << \textcolor{stringliteral}{"{} deleted"{}} << std::endl;}
+\DoxyCodeLine{165     \}}
+\DoxyCodeLine{166 \};}
+\DoxyCodeLine{167 }
+\DoxyCodeLine{172 \textcolor{keyword}{class }\mbox{\hyperlink{classObject}{Object}} \{}
+\DoxyCodeLine{173     \textcolor{keyword}{const} std::string objectName;}
+\DoxyCodeLine{174 \textcolor{keyword}{public}:}
+\DoxyCodeLine{180     \mbox{\hyperlink{classObject_a0e98d3853b14947624bf28ff7f505f2f}{Object}}(\textcolor{keyword}{const} std::string\& n) : objectName(n) \{\}}
+\DoxyCodeLine{186     std::string \mbox{\hyperlink{classObject_acb9b466607cb80beaaa30ece2f7f570a}{getName}}()\textcolor{keyword}{ const }\{\textcolor{keywordflow}{return} objectName;\}}
+\DoxyCodeLine{187 \};}
+\DoxyCodeLine{188 }
+\DoxyCodeLine{193 \textcolor{keyword}{class }\mbox{\hyperlink{classKey}{Key}} : \textcolor{keyword}{public} \mbox{\hyperlink{classObject}{Object}} \{}
+\DoxyCodeLine{194     std::string keyID;}
+\DoxyCodeLine{195 \};}
+\DoxyCodeLine{196 }
+\DoxyCodeLine{202 \textcolor{keyword}{class }\mbox{\hyperlink{classWorld}{World}} \{}
+\DoxyCodeLine{203     nodes worldRooms;}
+\DoxyCodeLine{204     entities population;}
+\DoxyCodeLine{205 \textcolor{keyword}{public}:}
+\DoxyCodeLine{206     \mbox{\hyperlink{classWorld}{World}}() \{\}}
+\DoxyCodeLine{214     \textcolor{keywordtype}{void} \mbox{\hyperlink{classWorld_a34bad91d52943ee1487577c3fc394a48}{RoomFactory}}(\textcolor{keyword}{const} std::string\& name, \textcolor{keywordtype}{int} \textcolor{keywordtype}{id}, \textcolor{keyword}{const} std::string\& desc) \{}
+\DoxyCodeLine{215         worldRooms.emplace\_back(\textcolor{keyword}{new} \mbox{\hyperlink{classRoom}{Room}}(name, \textcolor{keywordtype}{id}, desc));}
+\DoxyCodeLine{216     \}}
+\DoxyCodeLine{223     item \mbox{\hyperlink{classWorld_ae5aa04ce47aeb88837d42209907c9405}{ObjectFactory}}(\textcolor{keyword}{const} std::string name) \{}
+\DoxyCodeLine{224         \textcolor{keywordflow}{return} item(\textcolor{keyword}{new} \mbox{\hyperlink{classObject}{Object}}(name));}
+\DoxyCodeLine{225     \}}
+\DoxyCodeLine{226 \};}
+\DoxyCodeLine{227 \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

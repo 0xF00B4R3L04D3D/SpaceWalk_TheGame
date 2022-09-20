@@ -1,0 +1,97 @@
+\hypertarget{gmock-more-matchers_8h_source}{}\doxysection{gmock-\/more-\/matchers.h}
+\label{gmock-more-matchers_8h_source}\index{build/\_deps/googletest-\/src/googlemock/include/gmock/gmock-\/more-\/matchers.h@{build/\_deps/googletest-\/src/googlemock/include/gmock/gmock-\/more-\/matchers.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{comment}{// Copyright 2013, Google Inc.}}
+\DoxyCodeLine{2 \textcolor{comment}{// All rights reserved.}}
+\DoxyCodeLine{3 \textcolor{comment}{//}}
+\DoxyCodeLine{4 \textcolor{comment}{// Redistribution and use in source and binary forms, with or without}}
+\DoxyCodeLine{5 \textcolor{comment}{// modification, are permitted provided that the following conditions are}}
+\DoxyCodeLine{6 \textcolor{comment}{// met:}}
+\DoxyCodeLine{7 \textcolor{comment}{//}}
+\DoxyCodeLine{8 \textcolor{comment}{//     * Redistributions of source code must retain the above copyright}}
+\DoxyCodeLine{9 \textcolor{comment}{// notice, this list of conditions and the following disclaimer.}}
+\DoxyCodeLine{10 \textcolor{comment}{//     * Redistributions in binary form must reproduce the above}}
+\DoxyCodeLine{11 \textcolor{comment}{// copyright notice, this list of conditions and the following disclaimer}}
+\DoxyCodeLine{12 \textcolor{comment}{// in the documentation and/or other materials provided with the}}
+\DoxyCodeLine{13 \textcolor{comment}{// distribution.}}
+\DoxyCodeLine{14 \textcolor{comment}{//     * Neither the name of Google Inc. nor the names of its}}
+\DoxyCodeLine{15 \textcolor{comment}{// contributors may be used to endorse or promote products derived from}}
+\DoxyCodeLine{16 \textcolor{comment}{// this software without specific prior written permission.}}
+\DoxyCodeLine{17 \textcolor{comment}{//}}
+\DoxyCodeLine{18 \textcolor{comment}{// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS}}
+\DoxyCodeLine{19 \textcolor{comment}{// "{}AS IS"{} AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT}}
+\DoxyCodeLine{20 \textcolor{comment}{// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR}}
+\DoxyCodeLine{21 \textcolor{comment}{// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT}}
+\DoxyCodeLine{22 \textcolor{comment}{// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,}}
+\DoxyCodeLine{23 \textcolor{comment}{// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT}}
+\DoxyCodeLine{24 \textcolor{comment}{// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,}}
+\DoxyCodeLine{25 \textcolor{comment}{// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY}}
+\DoxyCodeLine{26 \textcolor{comment}{// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT}}
+\DoxyCodeLine{27 \textcolor{comment}{// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE}}
+\DoxyCodeLine{28 \textcolor{comment}{// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.}}
+\DoxyCodeLine{29 }
+\DoxyCodeLine{30 \textcolor{comment}{// Google Mock -\/ a framework for writing C++ mock classes.}}
+\DoxyCodeLine{31 \textcolor{comment}{//}}
+\DoxyCodeLine{32 \textcolor{comment}{// This file implements some matchers that depend on gmock-\/matchers.h.}}
+\DoxyCodeLine{33 \textcolor{comment}{//}}
+\DoxyCodeLine{34 \textcolor{comment}{// Note that tests are implemented in gmock-\/matchers\_test.cc rather than}}
+\DoxyCodeLine{35 \textcolor{comment}{// gmock-\/more-\/matchers-\/test.cc.}}
+\DoxyCodeLine{36 }
+\DoxyCodeLine{37 \textcolor{comment}{// IWYU pragma: private, include "{}gmock/gmock.h"{}}}
+\DoxyCodeLine{38 \textcolor{comment}{// IWYU pragma: friend gmock/.*}}
+\DoxyCodeLine{39 }
+\DoxyCodeLine{40 \textcolor{preprocessor}{\#ifndef GOOGLEMOCK\_INCLUDE\_GMOCK\_GMOCK\_MORE\_MATCHERS\_H\_}}
+\DoxyCodeLine{41 \textcolor{preprocessor}{\#define GOOGLEMOCK\_INCLUDE\_GMOCK\_GMOCK\_MORE\_MATCHERS\_H\_}}
+\DoxyCodeLine{42 }
+\DoxyCodeLine{43 \textcolor{preprocessor}{\#include "{}gmock/gmock-\/matchers.h"{}}}
+\DoxyCodeLine{44 }
+\DoxyCodeLine{45 \textcolor{keyword}{namespace }testing \{}
+\DoxyCodeLine{46 }
+\DoxyCodeLine{47 \textcolor{comment}{// Silence C4100 (unreferenced formal}}
+\DoxyCodeLine{48 \textcolor{comment}{// parameter) for MSVC}}
+\DoxyCodeLine{49 \textcolor{preprocessor}{\#ifdef \_MSC\_VER}}
+\DoxyCodeLine{50 \textcolor{preprocessor}{\#pragma warning(push)}}
+\DoxyCodeLine{51 \textcolor{preprocessor}{\#pragma warning(disable : 4100)}}
+\DoxyCodeLine{52 \textcolor{preprocessor}{\#if (\_MSC\_VER == 1900)}}
+\DoxyCodeLine{53 \textcolor{comment}{// and silence C4800 (C4800: 'int *const ': forcing value}}
+\DoxyCodeLine{54 \textcolor{comment}{// to bool 'true' or 'false') for MSVC 14}}
+\DoxyCodeLine{55 \textcolor{preprocessor}{\#pragma warning(disable : 4800)}}
+\DoxyCodeLine{56 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{57 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{58 }
+\DoxyCodeLine{59 \textcolor{comment}{// Defines a matcher that matches an empty container. The container must}}
+\DoxyCodeLine{60 \textcolor{comment}{// support both size() and empty(), which all STL-\/like containers provide.}}
+\DoxyCodeLine{61 MATCHER(IsEmpty, negation ? \textcolor{stringliteral}{"{}isn't empty"{}} : \textcolor{stringliteral}{"{}is empty"{}}) \{}
+\DoxyCodeLine{62   \textcolor{keywordflow}{if} (arg.empty()) \{}
+\DoxyCodeLine{63     \textcolor{keywordflow}{return} \textcolor{keyword}{true};}
+\DoxyCodeLine{64   \}}
+\DoxyCodeLine{65   *result\_listener << \textcolor{stringliteral}{"{}whose size is "{}} << arg.size();}
+\DoxyCodeLine{66   \textcolor{keywordflow}{return} \textcolor{keyword}{false};}
+\DoxyCodeLine{67 \}}
+\DoxyCodeLine{68 }
+\DoxyCodeLine{69 \textcolor{comment}{// Define a matcher that matches a value that evaluates in boolean}}
+\DoxyCodeLine{70 \textcolor{comment}{// context to true.  Useful for types that define "{}explicit operator}}
+\DoxyCodeLine{71 \textcolor{comment}{// bool"{} operators and so can't be compared for equality with true}}
+\DoxyCodeLine{72 \textcolor{comment}{// and false.}}
+\DoxyCodeLine{73 MATCHER(IsTrue, negation ? \textcolor{stringliteral}{"{}is false"{}} : \textcolor{stringliteral}{"{}is true"{}}) \{}
+\DoxyCodeLine{74   \textcolor{keywordflow}{return} \textcolor{keyword}{static\_cast<}\textcolor{keywordtype}{bool}\textcolor{keyword}{>}(arg);}
+\DoxyCodeLine{75 \}}
+\DoxyCodeLine{76 }
+\DoxyCodeLine{77 \textcolor{comment}{// Define a matcher that matches a value that evaluates in boolean}}
+\DoxyCodeLine{78 \textcolor{comment}{// context to false.  Useful for types that define "{}explicit operator}}
+\DoxyCodeLine{79 \textcolor{comment}{// bool"{} operators and so can't be compared for equality with true}}
+\DoxyCodeLine{80 \textcolor{comment}{// and false.}}
+\DoxyCodeLine{81 MATCHER(IsFalse, negation ? \textcolor{stringliteral}{"{}is true"{}} : \textcolor{stringliteral}{"{}is false"{}}) \{}
+\DoxyCodeLine{82   \textcolor{keywordflow}{return} !\textcolor{keyword}{static\_cast<}\textcolor{keywordtype}{bool}\textcolor{keyword}{>}(arg);}
+\DoxyCodeLine{83 \}}
+\DoxyCodeLine{84 }
+\DoxyCodeLine{85 \textcolor{preprocessor}{\#ifdef \_MSC\_VER}}
+\DoxyCodeLine{86 \textcolor{preprocessor}{\#pragma warning(pop)}}
+\DoxyCodeLine{87 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{88 }
+\DoxyCodeLine{89 \}  \textcolor{comment}{// namespace testing}}
+\DoxyCodeLine{90 }
+\DoxyCodeLine{91 \textcolor{preprocessor}{\#endif  }\textcolor{comment}{// GOOGLEMOCK\_INCLUDE\_GMOCK\_GMOCK\_MORE\_MATCHERS\_H\_}}
+
+\end{DoxyCode}

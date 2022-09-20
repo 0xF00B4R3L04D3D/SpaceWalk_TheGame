@@ -1,0 +1,351 @@
+\hypertarget{gtest-death-test_8h_source}{}\doxysection{gtest-\/death-\/test.h}
+\label{gtest-death-test_8h_source}\index{build/\_deps/googletest-\/src/googletest/include/gtest/gtest-\/death-\/test.h@{build/\_deps/googletest-\/src/googletest/include/gtest/gtest-\/death-\/test.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{comment}{// Copyright 2005, Google Inc.}}
+\DoxyCodeLine{2 \textcolor{comment}{// All rights reserved.}}
+\DoxyCodeLine{3 \textcolor{comment}{//}}
+\DoxyCodeLine{4 \textcolor{comment}{// Redistribution and use in source and binary forms, with or without}}
+\DoxyCodeLine{5 \textcolor{comment}{// modification, are permitted provided that the following conditions are}}
+\DoxyCodeLine{6 \textcolor{comment}{// met:}}
+\DoxyCodeLine{7 \textcolor{comment}{//}}
+\DoxyCodeLine{8 \textcolor{comment}{//     * Redistributions of source code must retain the above copyright}}
+\DoxyCodeLine{9 \textcolor{comment}{// notice, this list of conditions and the following disclaimer.}}
+\DoxyCodeLine{10 \textcolor{comment}{//     * Redistributions in binary form must reproduce the above}}
+\DoxyCodeLine{11 \textcolor{comment}{// copyright notice, this list of conditions and the following disclaimer}}
+\DoxyCodeLine{12 \textcolor{comment}{// in the documentation and/or other materials provided with the}}
+\DoxyCodeLine{13 \textcolor{comment}{// distribution.}}
+\DoxyCodeLine{14 \textcolor{comment}{//     * Neither the name of Google Inc. nor the names of its}}
+\DoxyCodeLine{15 \textcolor{comment}{// contributors may be used to endorse or promote products derived from}}
+\DoxyCodeLine{16 \textcolor{comment}{// this software without specific prior written permission.}}
+\DoxyCodeLine{17 \textcolor{comment}{//}}
+\DoxyCodeLine{18 \textcolor{comment}{// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS}}
+\DoxyCodeLine{19 \textcolor{comment}{// "{}AS IS"{} AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT}}
+\DoxyCodeLine{20 \textcolor{comment}{// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR}}
+\DoxyCodeLine{21 \textcolor{comment}{// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT}}
+\DoxyCodeLine{22 \textcolor{comment}{// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,}}
+\DoxyCodeLine{23 \textcolor{comment}{// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT}}
+\DoxyCodeLine{24 \textcolor{comment}{// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,}}
+\DoxyCodeLine{25 \textcolor{comment}{// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY}}
+\DoxyCodeLine{26 \textcolor{comment}{// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT}}
+\DoxyCodeLine{27 \textcolor{comment}{// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE}}
+\DoxyCodeLine{28 \textcolor{comment}{// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.}}
+\DoxyCodeLine{29 }
+\DoxyCodeLine{30 \textcolor{comment}{// The Google C++ Testing and Mocking Framework (Google Test)}}
+\DoxyCodeLine{31 \textcolor{comment}{//}}
+\DoxyCodeLine{32 \textcolor{comment}{// This header file defines the public API for death tests.  It is}}
+\DoxyCodeLine{33 \textcolor{comment}{// \#included by gtest.h so a user doesn't need to include this}}
+\DoxyCodeLine{34 \textcolor{comment}{// directly.}}
+\DoxyCodeLine{35 }
+\DoxyCodeLine{36 \textcolor{comment}{// IWYU pragma: private, include "{}gtest/gtest.h"{}}}
+\DoxyCodeLine{37 \textcolor{comment}{// IWYU pragma: friend gtest/.*}}
+\DoxyCodeLine{38 \textcolor{comment}{// IWYU pragma: friend gmock/.*}}
+\DoxyCodeLine{39 }
+\DoxyCodeLine{40 \textcolor{preprocessor}{\#ifndef GOOGLETEST\_INCLUDE\_GTEST\_GTEST\_DEATH\_TEST\_H\_}}
+\DoxyCodeLine{41 \textcolor{preprocessor}{\#define GOOGLETEST\_INCLUDE\_GTEST\_GTEST\_DEATH\_TEST\_H\_}}
+\DoxyCodeLine{42 }
+\DoxyCodeLine{43 \textcolor{preprocessor}{\#include "{}gtest/internal/gtest-\/death-\/test-\/internal.h"{}}}
+\DoxyCodeLine{44 }
+\DoxyCodeLine{45 \textcolor{comment}{// This flag controls the style of death tests.  Valid values are "{}threadsafe"{},}}
+\DoxyCodeLine{46 \textcolor{comment}{// meaning that the death test child process will re-\/execute the test binary}}
+\DoxyCodeLine{47 \textcolor{comment}{// from the start, running only a single death test, or "{}fast"{},}}
+\DoxyCodeLine{48 \textcolor{comment}{// meaning that the child process will execute the test logic immediately}}
+\DoxyCodeLine{49 \textcolor{comment}{// after forking.}}
+\DoxyCodeLine{50 GTEST\_DECLARE\_string\_(death\_test\_style);}
+\DoxyCodeLine{51 }
+\DoxyCodeLine{52 \textcolor{keyword}{namespace }testing \{}
+\DoxyCodeLine{53 }
+\DoxyCodeLine{54 \textcolor{preprocessor}{\#if GTEST\_HAS\_DEATH\_TEST}}
+\DoxyCodeLine{55 }
+\DoxyCodeLine{56 \textcolor{keyword}{namespace }internal \{}
+\DoxyCodeLine{57 }
+\DoxyCodeLine{58 \textcolor{comment}{// Returns a Boolean value indicating whether the caller is currently}}
+\DoxyCodeLine{59 \textcolor{comment}{// executing in the context of the death test child process.  Tools such as}}
+\DoxyCodeLine{60 \textcolor{comment}{// Valgrind heap checkers may need this to modify their behavior in death}}
+\DoxyCodeLine{61 \textcolor{comment}{// tests.  IMPORTANT: This is an internal utility.  Using it may break the}}
+\DoxyCodeLine{62 \textcolor{comment}{// implementation of death tests.  User code MUST NOT use it.}}
+\DoxyCodeLine{63 GTEST\_API\_ \textcolor{keywordtype}{bool} InDeathTestChild();}
+\DoxyCodeLine{64 }
+\DoxyCodeLine{65 \}  \textcolor{comment}{// namespace internal}}
+\DoxyCodeLine{66 }
+\DoxyCodeLine{67 \textcolor{comment}{// The following macros are useful for writing death tests.}}
+\DoxyCodeLine{68 }
+\DoxyCodeLine{69 \textcolor{comment}{// Here's what happens when an ASSERT\_DEATH* or EXPECT\_DEATH* is}}
+\DoxyCodeLine{70 \textcolor{comment}{// executed:}}
+\DoxyCodeLine{71 \textcolor{comment}{//}}
+\DoxyCodeLine{72 \textcolor{comment}{//   1. It generates a warning if there is more than one active}}
+\DoxyCodeLine{73 \textcolor{comment}{//   thread.  This is because it's safe to fork() or clone() only}}
+\DoxyCodeLine{74 \textcolor{comment}{//   when there is a single thread.}}
+\DoxyCodeLine{75 \textcolor{comment}{//}}
+\DoxyCodeLine{76 \textcolor{comment}{//   2. The parent process clone()s a sub-\/process and runs the death}}
+\DoxyCodeLine{77 \textcolor{comment}{//   test in it; the sub-\/process exits with code 0 at the end of the}}
+\DoxyCodeLine{78 \textcolor{comment}{//   death test, if it hasn't exited already.}}
+\DoxyCodeLine{79 \textcolor{comment}{//}}
+\DoxyCodeLine{80 \textcolor{comment}{//   3. The parent process waits for the sub-\/process to terminate.}}
+\DoxyCodeLine{81 \textcolor{comment}{//}}
+\DoxyCodeLine{82 \textcolor{comment}{//   4. The parent process checks the exit code and error message of}}
+\DoxyCodeLine{83 \textcolor{comment}{//   the sub-\/process.}}
+\DoxyCodeLine{84 \textcolor{comment}{//}}
+\DoxyCodeLine{85 \textcolor{comment}{// Examples:}}
+\DoxyCodeLine{86 \textcolor{comment}{//}}
+\DoxyCodeLine{87 \textcolor{comment}{//   ASSERT\_DEATH(server.SendMessage(56, "{}Hello"{}), "{}Invalid port number"{});}}
+\DoxyCodeLine{88 \textcolor{comment}{//   for (int i = 0; i < 5; i++) \{}}
+\DoxyCodeLine{89 \textcolor{comment}{//     EXPECT\_DEATH(server.ProcessRequest(i),}}
+\DoxyCodeLine{90 \textcolor{comment}{//                  "{}Invalid request .* in ProcessRequest()"{})}}
+\DoxyCodeLine{91 \textcolor{comment}{//                  << "{}Failed to die on request "{} << i;}}
+\DoxyCodeLine{92 \textcolor{comment}{//   \}}}
+\DoxyCodeLine{93 \textcolor{comment}{//}}
+\DoxyCodeLine{94 \textcolor{comment}{//   ASSERT\_EXIT(server.ExitNow(), ::testing::ExitedWithCode(0), "{}Exiting"{});}}
+\DoxyCodeLine{95 \textcolor{comment}{//}}
+\DoxyCodeLine{96 \textcolor{comment}{//   bool KilledBySIGHUP(int exit\_code) \{}}
+\DoxyCodeLine{97 \textcolor{comment}{//     return WIFSIGNALED(exit\_code) \&\& WTERMSIG(exit\_code) == SIGHUP;}}
+\DoxyCodeLine{98 \textcolor{comment}{//   \}}}
+\DoxyCodeLine{99 \textcolor{comment}{//}}
+\DoxyCodeLine{100 \textcolor{comment}{//   ASSERT\_EXIT(client.HangUpServer(), KilledBySIGHUP, "{}Hanging up!"{});}}
+\DoxyCodeLine{101 \textcolor{comment}{//}}
+\DoxyCodeLine{102 \textcolor{comment}{// The final parameter to each of these macros is a matcher applied to any data}}
+\DoxyCodeLine{103 \textcolor{comment}{// the sub-\/process wrote to stderr.  For compatibility with existing tests, a}}
+\DoxyCodeLine{104 \textcolor{comment}{// bare string is interpreted as a regular expression matcher.}}
+\DoxyCodeLine{105 \textcolor{comment}{//}}
+\DoxyCodeLine{106 \textcolor{comment}{// On the regular expressions used in death tests:}}
+\DoxyCodeLine{107 \textcolor{comment}{//}}
+\DoxyCodeLine{108 \textcolor{comment}{//   On POSIX-\/compliant systems (*nix), we use the <regex.h> library,}}
+\DoxyCodeLine{109 \textcolor{comment}{//   which uses the POSIX extended regex syntax.}}
+\DoxyCodeLine{110 \textcolor{comment}{//}}
+\DoxyCodeLine{111 \textcolor{comment}{//   On other platforms (e.g. Windows or Mac), we only support a simple regex}}
+\DoxyCodeLine{112 \textcolor{comment}{//   syntax implemented as part of Google Test.  This limited}}
+\DoxyCodeLine{113 \textcolor{comment}{//   implementation should be enough most of the time when writing}}
+\DoxyCodeLine{114 \textcolor{comment}{//   death tests; though it lacks many features you can find in PCRE}}
+\DoxyCodeLine{115 \textcolor{comment}{//   or POSIX extended regex syntax.  For example, we don't support}}
+\DoxyCodeLine{116 \textcolor{comment}{//   union ("{}x|y"{}), grouping ("{}(xy)"{}), brackets ("{}[xy]"{}), and}}
+\DoxyCodeLine{117 \textcolor{comment}{//   repetition count ("{}x\{5,7\}"{}), among others.}}
+\DoxyCodeLine{118 \textcolor{comment}{//}}
+\DoxyCodeLine{119 \textcolor{comment}{//   Below is the syntax that we do support.  We chose it to be a}}
+\DoxyCodeLine{120 \textcolor{comment}{//   subset of both PCRE and POSIX extended regex, so it's easy to}}
+\DoxyCodeLine{121 \textcolor{comment}{//   learn wherever you come from.  In the following: 'A' denotes a}}
+\DoxyCodeLine{122 \textcolor{comment}{//   literal character, period (.), or a single \(\backslash\)\(\backslash\) escape sequence;}}
+\DoxyCodeLine{123 \textcolor{comment}{//   'x' and 'y' denote regular expressions; 'm' and 'n' are for}}
+\DoxyCodeLine{124 \textcolor{comment}{//   natural numbers.}}
+\DoxyCodeLine{125 \textcolor{comment}{//}}
+\DoxyCodeLine{126 \textcolor{comment}{//     c     matches any literal character c}}
+\DoxyCodeLine{127 \textcolor{comment}{//     \(\backslash\)\(\backslash\)d   matches any decimal digit}}
+\DoxyCodeLine{128 \textcolor{comment}{//     \(\backslash\)\(\backslash\)D   matches any character that's not a decimal digit}}
+\DoxyCodeLine{129 \textcolor{comment}{//     \(\backslash\)\(\backslash\)f   matches \(\backslash\)f}}
+\DoxyCodeLine{130 \textcolor{comment}{//     \(\backslash\)\(\backslash\)n   matches \(\backslash\)n}}
+\DoxyCodeLine{131 \textcolor{comment}{//     \(\backslash\)\(\backslash\)r   matches \(\backslash\)r}}
+\DoxyCodeLine{132 \textcolor{comment}{//     \(\backslash\)\(\backslash\)s   matches any ASCII whitespace, including \(\backslash\)n}}
+\DoxyCodeLine{133 \textcolor{comment}{//     \(\backslash\)\(\backslash\)S   matches any character that's not a whitespace}}
+\DoxyCodeLine{134 \textcolor{comment}{//     \(\backslash\)\(\backslash\)t   matches \(\backslash\)t}}
+\DoxyCodeLine{135 \textcolor{comment}{//     \(\backslash\)\(\backslash\)v   matches \(\backslash\)v}}
+\DoxyCodeLine{136 \textcolor{comment}{//     \(\backslash\)\(\backslash\)w   matches any letter, \_, or decimal digit}}
+\DoxyCodeLine{137 \textcolor{comment}{//     \(\backslash\)\(\backslash\)W   matches any character that \(\backslash\)\(\backslash\)w doesn't match}}
+\DoxyCodeLine{138 \textcolor{comment}{//     \(\backslash\)\(\backslash\)c   matches any literal character c, which must be a punctuation}}
+\DoxyCodeLine{139 \textcolor{comment}{//     .     matches any single character except \(\backslash\)n}}
+\DoxyCodeLine{140 \textcolor{comment}{//     A?    matches 0 or 1 occurrences of A}}
+\DoxyCodeLine{141 \textcolor{comment}{//     A*    matches 0 or many occurrences of A}}
+\DoxyCodeLine{142 \textcolor{comment}{//     A+    matches 1 or many occurrences of A}}
+\DoxyCodeLine{143 \textcolor{comment}{//     \string^     matches the beginning of a string (not that of each line)}}
+\DoxyCodeLine{144 \textcolor{comment}{//     \$     matches the end of a string (not that of each line)}}
+\DoxyCodeLine{145 \textcolor{comment}{//     xy    matches x followed by y}}
+\DoxyCodeLine{146 \textcolor{comment}{//}}
+\DoxyCodeLine{147 \textcolor{comment}{//   If you accidentally use PCRE or POSIX extended regex features}}
+\DoxyCodeLine{148 \textcolor{comment}{//   not implemented by us, you will get a run-\/time failure.  In that}}
+\DoxyCodeLine{149 \textcolor{comment}{//   case, please try to rewrite your regular expression within the}}
+\DoxyCodeLine{150 \textcolor{comment}{//   above syntax.}}
+\DoxyCodeLine{151 \textcolor{comment}{//}}
+\DoxyCodeLine{152 \textcolor{comment}{//   This implementation is *not* meant to be as highly tuned or robust}}
+\DoxyCodeLine{153 \textcolor{comment}{//   as a compiled regex library, but should perform well enough for a}}
+\DoxyCodeLine{154 \textcolor{comment}{//   death test, which already incurs significant overhead by launching}}
+\DoxyCodeLine{155 \textcolor{comment}{//   a child process.}}
+\DoxyCodeLine{156 \textcolor{comment}{//}}
+\DoxyCodeLine{157 \textcolor{comment}{// Known caveats:}}
+\DoxyCodeLine{158 \textcolor{comment}{//}}
+\DoxyCodeLine{159 \textcolor{comment}{//   A "{}threadsafe"{} style death test obtains the path to the test}}
+\DoxyCodeLine{160 \textcolor{comment}{//   program from argv[0] and re-\/executes it in the sub-\/process.  For}}
+\DoxyCodeLine{161 \textcolor{comment}{//   simplicity, the current implementation doesn't search the PATH}}
+\DoxyCodeLine{162 \textcolor{comment}{//   when launching the sub-\/process.  This means that the user must}}
+\DoxyCodeLine{163 \textcolor{comment}{//   invoke the test program via a path that contains at least one}}
+\DoxyCodeLine{164 \textcolor{comment}{//   path separator (e.g. path/to/foo\_test and}}
+\DoxyCodeLine{165 \textcolor{comment}{//   /absolute/path/to/bar\_test are fine, but foo\_test is not).  This}}
+\DoxyCodeLine{166 \textcolor{comment}{//   is rarely a problem as people usually don't put the test binary}}
+\DoxyCodeLine{167 \textcolor{comment}{//   directory in PATH.}}
+\DoxyCodeLine{168 \textcolor{comment}{//}}
+\DoxyCodeLine{169 }
+\DoxyCodeLine{170 \textcolor{comment}{// Asserts that a given `statement` causes the program to exit, with an}}
+\DoxyCodeLine{171 \textcolor{comment}{// integer exit status that satisfies `predicate`, and emitting error output}}
+\DoxyCodeLine{172 \textcolor{comment}{// that matches `matcher`.}}
+\DoxyCodeLine{173 \textcolor{preprocessor}{\#define ASSERT\_EXIT(statement, predicate, matcher) \(\backslash\)}}
+\DoxyCodeLine{174 \textcolor{preprocessor}{  GTEST\_DEATH\_TEST\_(statement, predicate, matcher, GTEST\_FATAL\_FAILURE\_)}}
+\DoxyCodeLine{175 }
+\DoxyCodeLine{176 \textcolor{comment}{// Like `ASSERT\_EXIT`, but continues on to successive tests in the}}
+\DoxyCodeLine{177 \textcolor{comment}{// test suite, if any:}}
+\DoxyCodeLine{178 \textcolor{preprocessor}{\#define EXPECT\_EXIT(statement, predicate, matcher) \(\backslash\)}}
+\DoxyCodeLine{179 \textcolor{preprocessor}{  GTEST\_DEATH\_TEST\_(statement, predicate, matcher, GTEST\_NONFATAL\_FAILURE\_)}}
+\DoxyCodeLine{180 }
+\DoxyCodeLine{181 \textcolor{comment}{// Asserts that a given `statement` causes the program to exit, either by}}
+\DoxyCodeLine{182 \textcolor{comment}{// explicitly exiting with a nonzero exit code or being killed by a}}
+\DoxyCodeLine{183 \textcolor{comment}{// signal, and emitting error output that matches `matcher`.}}
+\DoxyCodeLine{184 \textcolor{preprocessor}{\#define ASSERT\_DEATH(statement, matcher) \(\backslash\)}}
+\DoxyCodeLine{185 \textcolor{preprocessor}{  ASSERT\_EXIT(statement, ::testing::internal::ExitedUnsuccessfully, matcher)}}
+\DoxyCodeLine{186 }
+\DoxyCodeLine{187 \textcolor{comment}{// Like `ASSERT\_DEATH`, but continues on to successive tests in the}}
+\DoxyCodeLine{188 \textcolor{comment}{// test suite, if any:}}
+\DoxyCodeLine{189 \textcolor{preprocessor}{\#define EXPECT\_DEATH(statement, matcher) \(\backslash\)}}
+\DoxyCodeLine{190 \textcolor{preprocessor}{  EXPECT\_EXIT(statement, ::testing::internal::ExitedUnsuccessfully, matcher)}}
+\DoxyCodeLine{191 }
+\DoxyCodeLine{192 \textcolor{comment}{// Two predicate classes that can be used in \{ASSERT,EXPECT\}\_EXIT*:}}
+\DoxyCodeLine{193 }
+\DoxyCodeLine{194 \textcolor{comment}{// Tests that an exit code describes a normal exit with a given exit code.}}
+\DoxyCodeLine{195 \textcolor{keyword}{class }GTEST\_API\_ ExitedWithCode \{}
+\DoxyCodeLine{196  \textcolor{keyword}{public}:}
+\DoxyCodeLine{197   \textcolor{keyword}{explicit} ExitedWithCode(\textcolor{keywordtype}{int} exit\_code);}
+\DoxyCodeLine{198   ExitedWithCode(\textcolor{keyword}{const} ExitedWithCode\&) = \textcolor{keywordflow}{default};}
+\DoxyCodeLine{199   \textcolor{keywordtype}{void} operator=(\textcolor{keyword}{const} ExitedWithCode\& other) = \textcolor{keyword}{delete};}
+\DoxyCodeLine{200   \textcolor{keywordtype}{bool} operator()(\textcolor{keywordtype}{int} exit\_status) \textcolor{keyword}{const};}
+\DoxyCodeLine{201 }
+\DoxyCodeLine{202  \textcolor{keyword}{private}:}
+\DoxyCodeLine{203   \textcolor{keyword}{const} \textcolor{keywordtype}{int} exit\_code\_;}
+\DoxyCodeLine{204 \};}
+\DoxyCodeLine{205 }
+\DoxyCodeLine{206 \textcolor{preprocessor}{\#if !GTEST\_OS\_WINDOWS \&\& !GTEST\_OS\_FUCHSIA}}
+\DoxyCodeLine{207 \textcolor{comment}{// Tests that an exit code describes an exit due to termination by a}}
+\DoxyCodeLine{208 \textcolor{comment}{// given signal.}}
+\DoxyCodeLine{209 \textcolor{keyword}{class }GTEST\_API\_ KilledBySignal \{}
+\DoxyCodeLine{210  \textcolor{keyword}{public}:}
+\DoxyCodeLine{211   \textcolor{keyword}{explicit} KilledBySignal(\textcolor{keywordtype}{int} signum);}
+\DoxyCodeLine{212   \textcolor{keywordtype}{bool} operator()(\textcolor{keywordtype}{int} exit\_status) \textcolor{keyword}{const};}
+\DoxyCodeLine{213 }
+\DoxyCodeLine{214  \textcolor{keyword}{private}:}
+\DoxyCodeLine{215   \textcolor{keyword}{const} \textcolor{keywordtype}{int} signum\_;}
+\DoxyCodeLine{216 \};}
+\DoxyCodeLine{217 \textcolor{preprocessor}{\#endif  }\textcolor{comment}{// !GTEST\_OS\_WINDOWS}}
+\DoxyCodeLine{218 }
+\DoxyCodeLine{219 \textcolor{comment}{// EXPECT\_DEBUG\_DEATH asserts that the given statements die in debug mode.}}
+\DoxyCodeLine{220 \textcolor{comment}{// The death testing framework causes this to have interesting semantics,}}
+\DoxyCodeLine{221 \textcolor{comment}{// since the sideeffects of the call are only visible in opt mode, and not}}
+\DoxyCodeLine{222 \textcolor{comment}{// in debug mode.}}
+\DoxyCodeLine{223 \textcolor{comment}{//}}
+\DoxyCodeLine{224 \textcolor{comment}{// In practice, this can be used to test functions that utilize the}}
+\DoxyCodeLine{225 \textcolor{comment}{// LOG(DFATAL) macro using the following style:}}
+\DoxyCodeLine{226 \textcolor{comment}{//}}
+\DoxyCodeLine{227 \textcolor{comment}{// int DieInDebugOr12(int* sideeffect) \{}}
+\DoxyCodeLine{228 \textcolor{comment}{//   if (sideeffect) \{}}
+\DoxyCodeLine{229 \textcolor{comment}{//     *sideeffect = 12;}}
+\DoxyCodeLine{230 \textcolor{comment}{//   \}}}
+\DoxyCodeLine{231 \textcolor{comment}{//   LOG(DFATAL) << "{}death"{};}}
+\DoxyCodeLine{232 \textcolor{comment}{//   return 12;}}
+\DoxyCodeLine{233 \textcolor{comment}{// \}}}
+\DoxyCodeLine{234 \textcolor{comment}{//}}
+\DoxyCodeLine{235 \textcolor{comment}{// TEST(TestSuite, TestDieOr12WorksInDgbAndOpt) \{}}
+\DoxyCodeLine{236 \textcolor{comment}{//   int sideeffect = 0;}}
+\DoxyCodeLine{237 \textcolor{comment}{//   // Only asserts in dbg.}}
+\DoxyCodeLine{238 \textcolor{comment}{//   EXPECT\_DEBUG\_DEATH(DieInDebugOr12(\&sideeffect), "{}death"{});}}
+\DoxyCodeLine{239 \textcolor{comment}{//}}
+\DoxyCodeLine{240 \textcolor{comment}{// \#ifdef NDEBUG}}
+\DoxyCodeLine{241 \textcolor{comment}{//   // opt-\/mode has sideeffect visible.}}
+\DoxyCodeLine{242 \textcolor{comment}{//   EXPECT\_EQ(12, sideeffect);}}
+\DoxyCodeLine{243 \textcolor{comment}{// \#else}}
+\DoxyCodeLine{244 \textcolor{comment}{//   // dbg-\/mode no visible sideeffect.}}
+\DoxyCodeLine{245 \textcolor{comment}{//   EXPECT\_EQ(0, sideeffect);}}
+\DoxyCodeLine{246 \textcolor{comment}{// \#endif}}
+\DoxyCodeLine{247 \textcolor{comment}{// \}}}
+\DoxyCodeLine{248 \textcolor{comment}{//}}
+\DoxyCodeLine{249 \textcolor{comment}{// This will assert that DieInDebugReturn12InOpt() crashes in debug}}
+\DoxyCodeLine{250 \textcolor{comment}{// mode, usually due to a DCHECK or LOG(DFATAL), but returns the}}
+\DoxyCodeLine{251 \textcolor{comment}{// appropriate fallback value (12 in this case) in opt mode. If you}}
+\DoxyCodeLine{252 \textcolor{comment}{// need to test that a function has appropriate side-\/effects in opt}}
+\DoxyCodeLine{253 \textcolor{comment}{// mode, include assertions against the side-\/effects.  A general}}
+\DoxyCodeLine{254 \textcolor{comment}{// pattern for this is:}}
+\DoxyCodeLine{255 \textcolor{comment}{//}}
+\DoxyCodeLine{256 \textcolor{comment}{// EXPECT\_DEBUG\_DEATH(\{}}
+\DoxyCodeLine{257 \textcolor{comment}{//   // Side-\/effects here will have an effect after this statement in}}
+\DoxyCodeLine{258 \textcolor{comment}{//   // opt mode, but none in debug mode.}}
+\DoxyCodeLine{259 \textcolor{comment}{//   EXPECT\_EQ(12, DieInDebugOr12(\&sideeffect));}}
+\DoxyCodeLine{260 \textcolor{comment}{// \}, "{}death"{});}}
+\DoxyCodeLine{261 \textcolor{comment}{//}}
+\DoxyCodeLine{262 \textcolor{preprocessor}{\#ifdef NDEBUG}}
+\DoxyCodeLine{263 }
+\DoxyCodeLine{264 \textcolor{preprocessor}{\#define EXPECT\_DEBUG\_DEATH(statement, regex) \(\backslash\)}}
+\DoxyCodeLine{265 \textcolor{preprocessor}{  GTEST\_EXECUTE\_STATEMENT\_(statement, regex)}}
+\DoxyCodeLine{266 }
+\DoxyCodeLine{267 \textcolor{preprocessor}{\#define ASSERT\_DEBUG\_DEATH(statement, regex) \(\backslash\)}}
+\DoxyCodeLine{268 \textcolor{preprocessor}{  GTEST\_EXECUTE\_STATEMENT\_(statement, regex)}}
+\DoxyCodeLine{269 }
+\DoxyCodeLine{270 \textcolor{preprocessor}{\#else}}
+\DoxyCodeLine{271 }
+\DoxyCodeLine{272 \textcolor{preprocessor}{\#define EXPECT\_DEBUG\_DEATH(statement, regex) EXPECT\_DEATH(statement, regex)}}
+\DoxyCodeLine{273 }
+\DoxyCodeLine{274 \textcolor{preprocessor}{\#define ASSERT\_DEBUG\_DEATH(statement, regex) ASSERT\_DEATH(statement, regex)}}
+\DoxyCodeLine{275 }
+\DoxyCodeLine{276 \textcolor{preprocessor}{\#endif  }\textcolor{comment}{// NDEBUG for EXPECT\_DEBUG\_DEATH}}
+\DoxyCodeLine{277 \textcolor{preprocessor}{\#endif  }\textcolor{comment}{// GTEST\_HAS\_DEATH\_TEST}}
+\DoxyCodeLine{278 }
+\DoxyCodeLine{279 \textcolor{comment}{// This macro is used for implementing macros such as}}
+\DoxyCodeLine{280 \textcolor{comment}{// EXPECT\_DEATH\_IF\_SUPPORTED and ASSERT\_DEATH\_IF\_SUPPORTED on systems where}}
+\DoxyCodeLine{281 \textcolor{comment}{// death tests are not supported. Those macros must compile on such systems}}
+\DoxyCodeLine{282 \textcolor{comment}{// if and only if EXPECT\_DEATH and ASSERT\_DEATH compile with the same parameters}}
+\DoxyCodeLine{283 \textcolor{comment}{// on systems that support death tests. This allows one to write such a macro on}}
+\DoxyCodeLine{284 \textcolor{comment}{// a system that does not support death tests and be sure that it will compile}}
+\DoxyCodeLine{285 \textcolor{comment}{// on a death-\/test supporting system. It is exposed publicly so that systems}}
+\DoxyCodeLine{286 \textcolor{comment}{// that have death-\/tests with stricter requirements than GTEST\_HAS\_DEATH\_TEST}}
+\DoxyCodeLine{287 \textcolor{comment}{// can write their own equivalent of EXPECT\_DEATH\_IF\_SUPPORTED and}}
+\DoxyCodeLine{288 \textcolor{comment}{// ASSERT\_DEATH\_IF\_SUPPORTED.}}
+\DoxyCodeLine{289 \textcolor{comment}{//}}
+\DoxyCodeLine{290 \textcolor{comment}{// Parameters:}}
+\DoxyCodeLine{291 \textcolor{comment}{//   statement -\/  A statement that a macro such as EXPECT\_DEATH would test}}
+\DoxyCodeLine{292 \textcolor{comment}{//                for program termination. This macro has to make sure this}}
+\DoxyCodeLine{293 \textcolor{comment}{//                statement is compiled but not executed, to ensure that}}
+\DoxyCodeLine{294 \textcolor{comment}{//                EXPECT\_DEATH\_IF\_SUPPORTED compiles with a certain}}
+\DoxyCodeLine{295 \textcolor{comment}{//                parameter if and only if EXPECT\_DEATH compiles with it.}}
+\DoxyCodeLine{296 \textcolor{comment}{//   regex     -\/  A regex that a macro such as EXPECT\_DEATH would use to test}}
+\DoxyCodeLine{297 \textcolor{comment}{//                the output of statement.  This parameter has to be}}
+\DoxyCodeLine{298 \textcolor{comment}{//                compiled but not evaluated by this macro, to ensure that}}
+\DoxyCodeLine{299 \textcolor{comment}{//                this macro only accepts expressions that a macro such as}}
+\DoxyCodeLine{300 \textcolor{comment}{//                EXPECT\_DEATH would accept.}}
+\DoxyCodeLine{301 \textcolor{comment}{//   terminator -\/ Must be an empty statement for EXPECT\_DEATH\_IF\_SUPPORTED}}
+\DoxyCodeLine{302 \textcolor{comment}{//                and a return statement for ASSERT\_DEATH\_IF\_SUPPORTED.}}
+\DoxyCodeLine{303 \textcolor{comment}{//                This ensures that ASSERT\_DEATH\_IF\_SUPPORTED will not}}
+\DoxyCodeLine{304 \textcolor{comment}{//                compile inside functions where ASSERT\_DEATH doesn't}}
+\DoxyCodeLine{305 \textcolor{comment}{//                compile.}}
+\DoxyCodeLine{306 \textcolor{comment}{//}}
+\DoxyCodeLine{307 \textcolor{comment}{//  The branch that has an always false condition is used to ensure that}}
+\DoxyCodeLine{308 \textcolor{comment}{//  statement and regex are compiled (and thus syntactically correct) but}}
+\DoxyCodeLine{309 \textcolor{comment}{//  never executed. The unreachable code macro protects the terminator}}
+\DoxyCodeLine{310 \textcolor{comment}{//  statement from generating an 'unreachable code' warning in case}}
+\DoxyCodeLine{311 \textcolor{comment}{//  statement unconditionally returns or throws. The Message constructor at}}
+\DoxyCodeLine{312 \textcolor{comment}{//  the end allows the syntax of streaming additional messages into the}}
+\DoxyCodeLine{313 \textcolor{comment}{//  macro, for compilational compatibility with EXPECT\_DEATH/ASSERT\_DEATH.}}
+\DoxyCodeLine{314 \textcolor{preprocessor}{\#define GTEST\_UNSUPPORTED\_DEATH\_TEST(statement, regex, terminator)             \(\backslash\)}}
+\DoxyCodeLine{315 \textcolor{preprocessor}{  GTEST\_AMBIGUOUS\_ELSE\_BLOCKER\_                                                \(\backslash\)}}
+\DoxyCodeLine{316 \textcolor{preprocessor}{  if (::testing::internal::AlwaysTrue()) \{                                     \(\backslash\)}}
+\DoxyCodeLine{317 \textcolor{preprocessor}{    GTEST\_LOG\_(WARNING) << "{}Death tests are not supported on this platform.\(\backslash\)n"{}} \(\backslash\)}
+\DoxyCodeLine{318                         << "{}Statement '"{} \#statement "{}' cannot be verified."{};   \(\backslash\)}
+\DoxyCodeLine{319   \} else if (::testing::internal::AlwaysFalse()) \{                             \(\backslash\)}
+\DoxyCodeLine{320     ::testing::internal::RE::PartialMatch("{}.*"{}, (regex));                      \(\backslash\)}
+\DoxyCodeLine{321     GTEST\_SUPPRESS\_UNREACHABLE\_CODE\_WARNING\_BELOW\_(statement);                 \(\backslash\)}
+\DoxyCodeLine{322     terminator;                                                                \(\backslash\)}
+\DoxyCodeLine{323   \} else                                                                       \(\backslash\)}
+\DoxyCodeLine{324     ::testing::Message()}
+\DoxyCodeLine{325 }
+\DoxyCodeLine{326 \textcolor{comment}{// EXPECT\_DEATH\_IF\_SUPPORTED(statement, regex) and}}
+\DoxyCodeLine{327 \textcolor{comment}{// ASSERT\_DEATH\_IF\_SUPPORTED(statement, regex) expand to real death tests if}}
+\DoxyCodeLine{328 \textcolor{comment}{// death tests are supported; otherwise they just issue a warning.  This is}}
+\DoxyCodeLine{329 \textcolor{comment}{// useful when you are combining death test assertions with normal test}}
+\DoxyCodeLine{330 \textcolor{comment}{// assertions in one test.}}
+\DoxyCodeLine{331 \textcolor{preprocessor}{\#if GTEST\_HAS\_DEATH\_TEST}}
+\DoxyCodeLine{332 \textcolor{preprocessor}{\#define EXPECT\_DEATH\_IF\_SUPPORTED(statement, regex) \(\backslash\)}}
+\DoxyCodeLine{333 \textcolor{preprocessor}{  EXPECT\_DEATH(statement, regex)}}
+\DoxyCodeLine{334 \textcolor{preprocessor}{\#define ASSERT\_DEATH\_IF\_SUPPORTED(statement, regex) \(\backslash\)}}
+\DoxyCodeLine{335 \textcolor{preprocessor}{  ASSERT\_DEATH(statement, regex)}}
+\DoxyCodeLine{336 \textcolor{preprocessor}{\#else}}
+\DoxyCodeLine{337 \textcolor{preprocessor}{\#define EXPECT\_DEATH\_IF\_SUPPORTED(statement, regex) \(\backslash\)}}
+\DoxyCodeLine{338 \textcolor{preprocessor}{  GTEST\_UNSUPPORTED\_DEATH\_TEST(statement, regex, )}}
+\DoxyCodeLine{339 \textcolor{preprocessor}{\#define ASSERT\_DEATH\_IF\_SUPPORTED(statement, regex) \(\backslash\)}}
+\DoxyCodeLine{340 \textcolor{preprocessor}{  GTEST\_UNSUPPORTED\_DEATH\_TEST(statement, regex, return)}}
+\DoxyCodeLine{341 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{342 }
+\DoxyCodeLine{343 \}  \textcolor{comment}{// namespace testing}}
+\DoxyCodeLine{344 }
+\DoxyCodeLine{345 \textcolor{preprocessor}{\#endif  }\textcolor{comment}{// GOOGLETEST\_INCLUDE\_GTEST\_GTEST\_DEATH\_TEST\_H\_}}
+
+\end{DoxyCode}

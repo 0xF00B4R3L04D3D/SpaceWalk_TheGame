@@ -1,0 +1,64 @@
+\hypertarget{classWorld}{}\doxysection{World Class Reference}
+\label{classWorld}\index{World@{World}}
+
+
+The world that contains and manages all the rooms, entities. A \mbox{\hyperlink{classWorld}{World}} object will able to parse the story file and initialize the game and run it.  
+
+
+
+
+{\ttfamily \#include $<$engine.\+hpp$>$}
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{classWorld_a34bad91d52943ee1487577c3fc394a48}{Room\+Factory}} (const std\+::string \&name, int id, const std\+::string \&desc)
+\begin{DoxyCompactList}\small\item\em Create \mbox{\hyperlink{classRoom}{Room}} with initial params and add it to world\+Rooms. \end{DoxyCompactList}\item 
+item \mbox{\hyperlink{classWorld_ae5aa04ce47aeb88837d42209907c9405}{Object\+Factory}} (const std\+::string name)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+The world that contains and manages all the rooms, entities. A \mbox{\hyperlink{classWorld}{World}} object will able to parse the story file and initialize the game and run it. 
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classWorld_ae5aa04ce47aeb88837d42209907c9405}\label{classWorld_ae5aa04ce47aeb88837d42209907c9405}} 
+\index{World@{World}!ObjectFactory@{ObjectFactory}}
+\index{ObjectFactory@{ObjectFactory}!World@{World}}
+\doxysubsubsection{\texorpdfstring{ObjectFactory()}{ObjectFactory()}}
+{\footnotesize\ttfamily item World\+::\+Object\+Factory (\begin{DoxyParamCaption}\item[{const std\+::string}]{name }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em name} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+item 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classWorld_a34bad91d52943ee1487577c3fc394a48}\label{classWorld_a34bad91d52943ee1487577c3fc394a48}} 
+\index{World@{World}!RoomFactory@{RoomFactory}}
+\index{RoomFactory@{RoomFactory}!World@{World}}
+\doxysubsubsection{\texorpdfstring{RoomFactory()}{RoomFactory()}}
+{\footnotesize\ttfamily void World\+::\+Room\+Factory (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{name,  }\item[{int}]{id,  }\item[{const std\+::string \&}]{desc }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Create \mbox{\hyperlink{classRoom}{Room}} with initial params and add it to world\+Rooms. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em name} & (const std\+::string\&)\+: Name of the \mbox{\hyperlink{classRoom}{Room}} \\
+\hline
+{\em id} & (const std\+::string\&)\+: ID of the \mbox{\hyperlink{classRoom}{Room}} \\
+\hline
+{\em desc} & (const std\+::string\&)\+: Description of the \mbox{\hyperlink{classRoom}{Room}} \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/engine.\+hpp\end{DoxyCompactItemize}

@@ -1,0 +1,130 @@
+\hypertarget{prime__tables_8h_source}{}\doxysection{prime\+\_\+tables.\+h}
+\label{prime__tables_8h_source}\index{build/\_deps/googletest-\/src/googletest/samples/prime\_tables.h@{build/\_deps/googletest-\/src/googletest/samples/prime\_tables.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 \textcolor{comment}{// Copyright 2008 Google Inc.}}
+\DoxyCodeLine{2 \textcolor{comment}{// All Rights Reserved.}}
+\DoxyCodeLine{3 \textcolor{comment}{//}}
+\DoxyCodeLine{4 \textcolor{comment}{// Redistribution and use in source and binary forms, with or without}}
+\DoxyCodeLine{5 \textcolor{comment}{// modification, are permitted provided that the following conditions are}}
+\DoxyCodeLine{6 \textcolor{comment}{// met:}}
+\DoxyCodeLine{7 \textcolor{comment}{//}}
+\DoxyCodeLine{8 \textcolor{comment}{//     * Redistributions of source code must retain the above copyright}}
+\DoxyCodeLine{9 \textcolor{comment}{// notice, this list of conditions and the following disclaimer.}}
+\DoxyCodeLine{10 \textcolor{comment}{//     * Redistributions in binary form must reproduce the above}}
+\DoxyCodeLine{11 \textcolor{comment}{// copyright notice, this list of conditions and the following disclaimer}}
+\DoxyCodeLine{12 \textcolor{comment}{// in the documentation and/or other materials provided with the}}
+\DoxyCodeLine{13 \textcolor{comment}{// distribution.}}
+\DoxyCodeLine{14 \textcolor{comment}{//     * Neither the name of Google Inc. nor the names of its}}
+\DoxyCodeLine{15 \textcolor{comment}{// contributors may be used to endorse or promote products derived from}}
+\DoxyCodeLine{16 \textcolor{comment}{// this software without specific prior written permission.}}
+\DoxyCodeLine{17 \textcolor{comment}{//}}
+\DoxyCodeLine{18 \textcolor{comment}{// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS}}
+\DoxyCodeLine{19 \textcolor{comment}{// "{}AS IS"{} AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT}}
+\DoxyCodeLine{20 \textcolor{comment}{// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR}}
+\DoxyCodeLine{21 \textcolor{comment}{// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT}}
+\DoxyCodeLine{22 \textcolor{comment}{// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,}}
+\DoxyCodeLine{23 \textcolor{comment}{// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT}}
+\DoxyCodeLine{24 \textcolor{comment}{// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,}}
+\DoxyCodeLine{25 \textcolor{comment}{// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY}}
+\DoxyCodeLine{26 \textcolor{comment}{// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT}}
+\DoxyCodeLine{27 \textcolor{comment}{// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE}}
+\DoxyCodeLine{28 \textcolor{comment}{// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.}}
+\DoxyCodeLine{29 }
+\DoxyCodeLine{30 \textcolor{comment}{// This provides interface PrimeTable that determines whether a number is a}}
+\DoxyCodeLine{31 \textcolor{comment}{// prime and determines a next prime number. This interface is used}}
+\DoxyCodeLine{32 \textcolor{comment}{// in Google Test samples demonstrating use of parameterized tests.}}
+\DoxyCodeLine{33 }
+\DoxyCodeLine{34 \textcolor{preprocessor}{\#ifndef GOOGLETEST\_SAMPLES\_PRIME\_TABLES\_H\_}}
+\DoxyCodeLine{35 \textcolor{preprocessor}{\#define GOOGLETEST\_SAMPLES\_PRIME\_TABLES\_H\_}}
+\DoxyCodeLine{36 }
+\DoxyCodeLine{37 \textcolor{preprocessor}{\#include <algorithm>}}
+\DoxyCodeLine{38 }
+\DoxyCodeLine{39 \textcolor{comment}{// The prime table interface.}}
+\DoxyCodeLine{40 \textcolor{keyword}{class }\mbox{\hyperlink{classPrimeTable}{PrimeTable}} \{}
+\DoxyCodeLine{41  \textcolor{keyword}{public}:}
+\DoxyCodeLine{42   \textcolor{keyword}{virtual} \mbox{\hyperlink{classPrimeTable}{\string~PrimeTable}}() \{\}}
+\DoxyCodeLine{43 }
+\DoxyCodeLine{44   \textcolor{comment}{// Returns true if and only if n is a prime number.}}
+\DoxyCodeLine{45   \textcolor{keyword}{virtual} \textcolor{keywordtype}{bool} IsPrime(\textcolor{keywordtype}{int} n) \textcolor{keyword}{const} = 0;}
+\DoxyCodeLine{46 }
+\DoxyCodeLine{47   \textcolor{comment}{// Returns the smallest prime number greater than p; or returns -\/1}}
+\DoxyCodeLine{48   \textcolor{comment}{// if the next prime is beyond the capacity of the table.}}
+\DoxyCodeLine{49   \textcolor{keyword}{virtual} \textcolor{keywordtype}{int} GetNextPrime(\textcolor{keywordtype}{int} p) \textcolor{keyword}{const} = 0;}
+\DoxyCodeLine{50 \};}
+\DoxyCodeLine{51 }
+\DoxyCodeLine{52 \textcolor{comment}{// Implementation \#1 calculates the primes on-\/the-\/fly.}}
+\DoxyCodeLine{53 \textcolor{keyword}{class }\mbox{\hyperlink{classOnTheFlyPrimeTable}{OnTheFlyPrimeTable}} : \textcolor{keyword}{public} \mbox{\hyperlink{classPrimeTable}{PrimeTable}} \{}
+\DoxyCodeLine{54  \textcolor{keyword}{public}:}
+\DoxyCodeLine{55   \textcolor{keywordtype}{bool} IsPrime(\textcolor{keywordtype}{int} n)\textcolor{keyword}{ const override }\{}
+\DoxyCodeLine{56     \textcolor{keywordflow}{if} (n <= 1) \textcolor{keywordflow}{return} \textcolor{keyword}{false};}
+\DoxyCodeLine{57 }
+\DoxyCodeLine{58     \textcolor{keywordflow}{for} (\textcolor{keywordtype}{int} i = 2; i * i <= n; i++) \{}
+\DoxyCodeLine{59       \textcolor{comment}{// n is divisible by an integer other than 1 and itself.}}
+\DoxyCodeLine{60       \textcolor{keywordflow}{if} ((n \% i) == 0) \textcolor{keywordflow}{return} \textcolor{keyword}{false};}
+\DoxyCodeLine{61     \}}
+\DoxyCodeLine{62 }
+\DoxyCodeLine{63     \textcolor{keywordflow}{return} \textcolor{keyword}{true};}
+\DoxyCodeLine{64   \}}
+\DoxyCodeLine{65 }
+\DoxyCodeLine{66   \textcolor{keywordtype}{int} GetNextPrime(\textcolor{keywordtype}{int} p)\textcolor{keyword}{ const override }\{}
+\DoxyCodeLine{67     \textcolor{keywordflow}{if} (p < 0) \textcolor{keywordflow}{return} -\/1;}
+\DoxyCodeLine{68 }
+\DoxyCodeLine{69     \textcolor{keywordflow}{for} (\textcolor{keywordtype}{int} n = p + 1;; n++) \{}
+\DoxyCodeLine{70       \textcolor{keywordflow}{if} (IsPrime(n)) \textcolor{keywordflow}{return} n;}
+\DoxyCodeLine{71     \}}
+\DoxyCodeLine{72   \}}
+\DoxyCodeLine{73 \};}
+\DoxyCodeLine{74 }
+\DoxyCodeLine{75 \textcolor{comment}{// Implementation \#2 pre-\/calculates the primes and stores the result}}
+\DoxyCodeLine{76 \textcolor{comment}{// in an array.}}
+\DoxyCodeLine{77 \textcolor{keyword}{class }\mbox{\hyperlink{classPreCalculatedPrimeTable}{PreCalculatedPrimeTable}} : \textcolor{keyword}{public} \mbox{\hyperlink{classPrimeTable}{PrimeTable}} \{}
+\DoxyCodeLine{78  \textcolor{keyword}{public}:}
+\DoxyCodeLine{79   \textcolor{comment}{// 'max' specifies the maximum number the prime table holds.}}
+\DoxyCodeLine{80   \textcolor{keyword}{explicit} \mbox{\hyperlink{classPreCalculatedPrimeTable}{PreCalculatedPrimeTable}}(\textcolor{keywordtype}{int} max)}
+\DoxyCodeLine{81       : is\_prime\_size\_(max + 1), is\_prime\_(\textcolor{keyword}{new} \textcolor{keywordtype}{bool}[max + 1]) \{}
+\DoxyCodeLine{82     CalculatePrimesUpTo(max);}
+\DoxyCodeLine{83   \}}
+\DoxyCodeLine{84   \mbox{\hyperlink{classPreCalculatedPrimeTable}{\string~PreCalculatedPrimeTable}}()\textcolor{keyword}{ override }\{ \textcolor{keyword}{delete}[] is\_prime\_; \}}
+\DoxyCodeLine{85 }
+\DoxyCodeLine{86   \textcolor{keywordtype}{bool} IsPrime(\textcolor{keywordtype}{int} n)\textcolor{keyword}{ const override }\{}
+\DoxyCodeLine{87     \textcolor{keywordflow}{return} 0 <= n \&\& n < is\_prime\_size\_ \&\& is\_prime\_[n];}
+\DoxyCodeLine{88   \}}
+\DoxyCodeLine{89 }
+\DoxyCodeLine{90   \textcolor{keywordtype}{int} GetNextPrime(\textcolor{keywordtype}{int} p)\textcolor{keyword}{ const override }\{}
+\DoxyCodeLine{91     \textcolor{keywordflow}{for} (\textcolor{keywordtype}{int} n = p + 1; n < is\_prime\_size\_; n++) \{}
+\DoxyCodeLine{92       \textcolor{keywordflow}{if} (is\_prime\_[n]) \textcolor{keywordflow}{return} n;}
+\DoxyCodeLine{93     \}}
+\DoxyCodeLine{94 }
+\DoxyCodeLine{95     \textcolor{keywordflow}{return} -\/1;}
+\DoxyCodeLine{96   \}}
+\DoxyCodeLine{97 }
+\DoxyCodeLine{98  \textcolor{keyword}{private}:}
+\DoxyCodeLine{99   \textcolor{keywordtype}{void} CalculatePrimesUpTo(\textcolor{keywordtype}{int} max) \{}
+\DoxyCodeLine{100     ::std::fill(is\_prime\_, is\_prime\_ + is\_prime\_size\_, \textcolor{keyword}{true});}
+\DoxyCodeLine{101     is\_prime\_[0] = is\_prime\_[1] = \textcolor{keyword}{false};}
+\DoxyCodeLine{102 }
+\DoxyCodeLine{103     \textcolor{comment}{// Checks every candidate for prime number (we know that 2 is the only even}}
+\DoxyCodeLine{104     \textcolor{comment}{// prime).}}
+\DoxyCodeLine{105     \textcolor{keywordflow}{for} (\textcolor{keywordtype}{int} i = 2; i * i <= max; i += i \% 2 + 1) \{}
+\DoxyCodeLine{106       \textcolor{keywordflow}{if} (!is\_prime\_[i]) \textcolor{keywordflow}{continue};}
+\DoxyCodeLine{107 }
+\DoxyCodeLine{108       \textcolor{comment}{// Marks all multiples of i (except i itself) as non-\/prime.}}
+\DoxyCodeLine{109       \textcolor{comment}{// We are starting here from i-\/th multiplier, because all smaller}}
+\DoxyCodeLine{110       \textcolor{comment}{// complex numbers were already marked.}}
+\DoxyCodeLine{111       \textcolor{keywordflow}{for} (\textcolor{keywordtype}{int} j = i * i; j <= max; j += i) \{}
+\DoxyCodeLine{112         is\_prime\_[j] = \textcolor{keyword}{false};}
+\DoxyCodeLine{113       \}}
+\DoxyCodeLine{114     \}}
+\DoxyCodeLine{115   \}}
+\DoxyCodeLine{116 }
+\DoxyCodeLine{117   \textcolor{keyword}{const} \textcolor{keywordtype}{int} is\_prime\_size\_;}
+\DoxyCodeLine{118   \textcolor{keywordtype}{bool}* \textcolor{keyword}{const} is\_prime\_;}
+\DoxyCodeLine{119 }
+\DoxyCodeLine{120   \textcolor{comment}{// Disables compiler warning "{}assignment operator could not be generated."{}}}
+\DoxyCodeLine{121   \textcolor{keywordtype}{void} operator=(\textcolor{keyword}{const} \mbox{\hyperlink{classPreCalculatedPrimeTable}{PreCalculatedPrimeTable}}\& rhs);}
+\DoxyCodeLine{122 \};}
+\DoxyCodeLine{123 }
+\DoxyCodeLine{124 \textcolor{preprocessor}{\#endif  }\textcolor{comment}{// GOOGLETEST\_SAMPLES\_PRIME\_TABLES\_H\_}}
+
+\end{DoxyCode}

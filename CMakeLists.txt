@@ -3,14 +3,18 @@ cmake_minimum_required(VERSION 3.14)
 # set the project name
 project(SpaceWalk VERSION 0.1)
 
+# set C++ standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+# version control config header file
 configure_file(${PROJECT_SOURCE_DIR}/src/Config.h.in Config.h)
 
+# set up options to build tests
 option(TEST_ROOM "Test room class of engine.h" OFF)
 option(TEST_OBJECT "Test object class of engine.h" OFF)
 
+# add include directories, where header files can be found
 include_directories("${PROJECT_SOURCE_DIR}/src")
 
 macro(runtest testname)
