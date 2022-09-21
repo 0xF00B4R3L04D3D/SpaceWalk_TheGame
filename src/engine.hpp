@@ -55,7 +55,7 @@ class Entity {
 	int hp;
 	int stamina;
 	int intelligence;
-	int agility
+	int agility;
 	int strenght;
 	int stealth;
 	int carisma;
