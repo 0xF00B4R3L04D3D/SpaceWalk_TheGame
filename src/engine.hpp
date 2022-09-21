@@ -50,9 +50,43 @@ typedef std::vector<ent> entities;
  * 
  */
 class Entity {
-	std::string name;
+	const std::string name;
+	items inventory;
 	int hp;
 	int stamina;
+	int intelligence;
+	int agility
+	int strenght;
+	int stealth;
+	int carisma;
+public:
+	/**
+	 * @brief Construct a new Entity object
+	 * 
+	 * @param n (std::string)
+	 */
+	Entity(const std::string& n) : name(n) {}
+	/**
+	 * @brief Get the Name of the Entity
+	 * 
+	 * @return std::string 
+	 */
+	std::string getName() const {return name;}
+	/**
+	 * @brief Add Item to Entity's inventory
+	 * 
+	 * @param i (item&): Item to move to Entity's inventory
+	 * @return Entity&
+	 */
+	Entity& addItem(item& i) {
+		inventory.emplace_back(std::move(i));
+		return *this;
+	}
+	~Entity() {
+		for (items::iterator it = inventory.begin(); it != inventory.end(); it++) {
+			it->reset();
+		}
+	}
 };
 
 /**
@@ -66,6 +100,7 @@ class Room {
 	const int roomID; // ID of the room, that connects a key to this room.
 	items inventory; // Items, that can be found in the room.
 	const std::string description; // Description of the room.
+	bool locked;
 public:
 	/**
 	 * @brief Construct a new Room object
@@ -235,6 +270,9 @@ public:
 	 */
 	void RoomFactory(const std::string& name, int id, const std::string& desc) {
 		worldRooms.emplace_back(new Room(name, id, desc));
+	}
+	void EntityFactory(const std::string& name) {
+		population.emplace_back(new Entity(name));
 	}
 	/**
 	 * @brief Destroy the World object. This is very importand step, because all things in the world are contained in smart pointers.
