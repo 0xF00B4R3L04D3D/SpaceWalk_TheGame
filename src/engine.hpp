@@ -38,9 +38,9 @@ typedef std::vector<item> items;
  * 
  */
 class Entity {
+protected:	
 	std::string entityName;
 	int hp;
-	int stamina;
 	int intelligence;
 	int strength;
 	std::string appearance;
@@ -52,6 +52,44 @@ public:
 	 * @param app (std::string): Description of the entity
 	 */
 	Entity(std::string n,std::string app):entityName(n),appearance(app){}
+	
+	/**
+	 * @brief Get the Entity Name object
+	 * 
+	 * @return std::string The name of the entity be it an NPC, user or anything else.
+	 */
+	std::string getEntityName () const {return entityName;}
+	/**
+	 * @brief Get the HP of the Entity
+	 * 
+	 * @return int The HP of the entity, not const cuz it can change
+	 */
+	int getHP () {return hp;}
+	/**
+	 * @brief Get the intelligence of the entity
+	 * 
+	 * @return int The intelligence of the enemy, not const it can change
+	 */
+	int getInt () {return intelligence;}
+	/**
+	 * @brief Get the strength of the entity
+	 * 
+	 * @return int The strength of the entity, it can change
+	 */
+	int getStr () {return strength;}
+	/**
+	 * @brief Get the appeareance of an entity
+	 * 
+	 * @return std::string The appearance of any entity, can't change
+	 */
+	std::string getApp () const {return appearance;}
+};
+/**
+ * @brief Hero of the story
+ * 
+ */
+class Hero : public Entity {
+	int heroID;
 
 };
 
