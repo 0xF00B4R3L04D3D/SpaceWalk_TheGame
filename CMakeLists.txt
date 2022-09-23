@@ -13,10 +13,12 @@ configure_file(${PROJECT_SOURCE_DIR}/src/Config.h.in Config.h)
 # set up options to build tests
 option(TEST_ROOM "Test room class of engine.h" OFF)
 option(TEST_OBJECT "Test object class of engine.h" OFF)
+option(TEST_WORLD "Test world class of engine.h" OFF)
 option(TEST_UNIT "Build unittest, that tries to cover the core functionalities of the game." OFF)
 
 # add include directories, where header files can be found
 include_directories("${PROJECT_SOURCE_DIR}/src")
+add_library(tinyxml2 src/tinyxml2.cpp)
 
 macro(runtest testname)
 	include(FetchContent)
@@ -33,6 +35,7 @@ macro(runtest testname)
 	target_link_libraries(
 		test_module	
 		GTest::gtest_main
+		tinyxml2
 	)
 	include(GoogleTest)
 	gtest_discover_tests(test_module)
@@ -40,6 +43,7 @@ endmacro()
 
 macro(buildworld)
 	add_executable(spacewalk src/main.cpp)
+	target_link_libraries(spacewalk PUBLIC tinyxml2)
 	target_include_directories(spacewalk PUBLIC
 		"${PROJECT_BINARY_DIR}"
 		"${PROJECT_SOURCE_DIR}"
@@ -53,6 +57,8 @@ elseif(TEST_OBJECT)
 	runtest("tests/test_object.cpp")
 elseif(TEST_UNIT)
 	runtest("tests/test_unit.cpp")
+elseif(TEST_WORLD)
+	runtest("tests/test_world.cpp")
 else()
 	buildworld()
 endif()
