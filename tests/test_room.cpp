@@ -11,7 +11,7 @@ class RoomTest : public ::testing::Test {
                 testItems.emplace_back(new Object("Item No. " + std::to_string(i), i, "This is a test item."));
             }
         }
-        void TearDown() {
+        void TearDown() override {
             for (int i = 0; i < 10; i++) {
                 testRooms[i].reset();
             }
