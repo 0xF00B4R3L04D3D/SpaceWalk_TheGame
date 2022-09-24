@@ -13,6 +13,7 @@ class Room;
 class Entity;
 class Mission;
 class Choice;
+class Connection;
 
 /**
  * @typedef Room wrapped in a shared_ptr to be able to connect it to other nodes.
@@ -44,6 +45,11 @@ typedef std::vector<item> items;
  * 
  */
 typedef std::vector<ent> entities;
+/**
+ * @typedef Connection of two rooms represented with the ID's of the rooms.
+ * 
+ */
+typedef std::pair<int, std::vector<int>> roomConnection;
 
 /**
  * @brief Base class for a NPC, USER or any other Entity living in the game world.
@@ -208,6 +214,7 @@ class Object {
 	const std::string objectName;
 	const std::string objectDescriptor;
 	const int objID;
+	
 public:
 	/**
 	 * @brief Construct a new Object object
@@ -254,37 +261,128 @@ class Key : public Object {
  * 
  */
 class World {
+	std::string title;
 	nodes worldRooms;
 	entities population;
 	tinyxml2::XMLDocument story;
+	std::map<int, std::vector<int>> roomConnectionMap;
 public:
+	World() {}
+	/**
+	 * @brief Construct a new World object
+	 * 
+	 * @param path2story (const char*) The path to the story xml file.
+	 */
 	World(const char* path2story) {
 		story.LoadFile(path2story);
+	}
+	nodes getWorldRooms() const {
+		return worldRooms;
+	}
+	entities getPopulation() const {
+		return population;
 	}
 	/**
 	 * @brief Create Room with initial params and add it to worldRooms.
 	 * 
-	 * @param name (const std::string&): Name of the Room
+	 * @param title (const std::string&): Name of the Room
 	 * @param id (const std::string&): ID of the Room
 	 * @param desc (const std::string&): Description of the Room
 	 */
 	void RoomFactory(const std::string& name, int id, const std::string& desc) {
 		worldRooms.emplace_back(new Room(name, id, desc));
 	}
+	/**
+	 * @brief Create entity and add it to the population.
+	 * 
+	 * @param name 
+	 */
 	void EntityFactory(const std::string& name) {
 		population.emplace_back(new Entity(name));
 	}
 	/**
-	 * @brief Destroy the World object. This is very importand step, because all things in the world are contained in smart pointers.
+	 * @brief Get the Story object
 	 * 
+	 * @return tinyxml2::XMLDocument& 
 	 */
-	~World() {
+	tinyxml2::XMLDocument& getStory() {return story;}
+	/**
+	 * @brief create inventory
+	 * 
+	 * @param invEle (tinyxml2::XMLElement*)
+	 * @return items 
+	 */
+	items makeInventory(tinyxml2::XMLElement* invEle) {
+		tinyxml2::XMLElement* firstObj = invEle->FirstChildElement("object");
+		tinyxml2::XMLElement* actual = firstObj;
+		items retItems;
+		while(actual) {
+			const std::string objName(actual->FirstChildElement("name")->GetText());
+			const std::string desc(actual->FirstChildElement("description")->GetText());
+			int id = 0;
+			actual->FirstChildElement("id")->QueryIntText(&id);
+			retItems.emplace_back(new Object(objName, id, desc));
+			actual = actual->NextSiblingElement("object");
+		}
+		return retItems;
+	}
+	/**
+	 * @brief Load neigbouring rooms id's to connection map
+	 * 
+	 * @param conns 
+	 * @return std::vector<int> 
+	 */
+	std::vector<int> trackConnections(tinyxml2::XMLElement* conns) {
+		tinyxml2::XMLElement* firstConns = conns->FirstChildElement("id");
+		tinyxml2::XMLElement* actual = firstConns;
+		std::vector<int> neighbours;
+		while(actual) {
+			int nid = 0;
+			actual->QueryIntText(&nid);
+			neighbours.push_back(nid); 
+			actual = actual->NextSiblingElement("id");
+		}
+		return neighbours;
+	}
+	void loadRooms(tinyxml2::XMLElement* firstRoom) {
+		const char* elementName = "room";
+		tinyxml2::XMLElement* actual = firstRoom;
+		while(actual) {
+			const std::string roomName(actual->FirstChildElement("name")->GetText());
+			const std::string roomDescription(actual->FirstChildElement("description")->GetText());
+			int roomID;
+			actual->FirstChildElement("id")->QueryIntText(&roomID);
+			RoomFactory(roomName, roomID, roomDescription); // Construct room with name, id and desc
+			tinyxml2::XMLElement* invEle = firstRoom->FirstChildElement("inventory"); // TODO
+			items inv = makeInventory(invEle);
+			worldRooms[worldRooms.size()-1]->addItems(inv);
+			tinyxml2::XMLElement* conns = actual->FirstChildElement("connections");
+			//TODO segmentation fault in this function roomConnectionMap[roomID] = trackConnections(conns);
+			actual = actual->NextSiblingElement(elementName);
+		}
+	}
+	void connectRooms() {
+
+	}
+	void initWorld(const char* path2story) {
+		story.LoadFile(path2story);
+		tinyxml2::XMLElement* worldElement = story.FirstChildElement("world");
+		loadRooms(worldElement->FirstChildElement("room"));
+	}
+	void destroyWorld() {
 		for (nodes::iterator it = worldRooms.begin(); it != worldRooms.end(); it++) {
 			it->reset();
 		}
 		for (entities::iterator it = population.begin(); it != population.end(); it++) {
 			it->reset();
 		}
+	}
+	/**
+	 * @brief Destroy the World object. This is very importand step, because all things in the world are contained in smart pointers.
+	 * 
+	 */
+	~World() {
+		destroyWorld();
 	}
 };
 #endif
