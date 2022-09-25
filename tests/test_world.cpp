@@ -30,17 +30,12 @@ TEST_F(WorldTest, test_xml_module) {
     // test NextSiblingElement()
 }
 
-/*TEST_F(WorldTest, test_initWorld) {
-    std::string expectedName("TestRoom1");
-    std::string expectedDescription("This is the first test room");
-    int expectedID = 1;
-    std::string expectedObjectName("TestObject1");
-    std::string expectedObjectDescription("This is test object 1");
-    int expectedObjectID = 1;
-    EXPECT_STREQ(testWorld.getWorldRooms()[0]->getName().c_str(), expectedName.c_str());
-    EXPECT_STREQ(testWorld.getWorldRooms()[0]->getDescription().c_str(), expectedDescription.c_str());
-    EXPECT_EQ(testWorld.getWorldRooms()[0]->getID(), expectedID);
-    EXPECT_STREQ(testWorld.getWorldRooms()[0]->getItems()[0]->getName().c_str(), expectedObjectName.c_str());
-    EXPECT_STREQ(testWorld.getWorldRooms()[0]->getItems()[0]->getDescription().c_str(), expectedObjectDescription.c_str());
-    EXPECT_EQ(testWorld.getWorldRooms()[0]->getItems()[0]->getID(), expectedObjectID);
-}*/
+TEST_F(WorldTest, test_initWorld) {
+    ASSERT_EQ(testWorld.getWorldRooms().size(), 3);
+    for (int i = 0; i < testWorld.getWorldRooms().size(); i++) {
+        EXPECT_EQ(testWorld.getWorldRooms()[i]->getID(), (i+1));
+        for (int j = 0; j < testWorld.getWorldRooms()[i]->getItems().size(); j++) {
+            EXPECT_EQ(testWorld.getWorldRooms()[i]->getItems()[j]->getID(), (i+1));
+        }
+    }
+}

@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include <map>
+#include <iostream>
 #include "tinyxml2.h"
 
 class World;
@@ -84,8 +85,8 @@ public:
 	 * @param i (item&): Item to move to Entity's inventory
 	 * @return Entity&
 	 */
-	Entity& addItem(item& i) {
-		inventory.emplace_back(std::move(i));
+	Entity& addItem(Object* i) {
+		inventory.emplace_back(i);
 		return *this;
 	}
 	~Entity() {
@@ -167,7 +168,7 @@ public:
 	 * 
 	 * @return items const& 
 	 */
-	items const& getItems() {return inventory;}	
+	items& getItems() {return inventory;}	
 	/**
 	 * @brief Add new item to the Inventory of the Room 
 	 * 
@@ -186,7 +187,7 @@ public:
 	 */
 	Room& addItems(items& inv) {
 		for (items::iterator it = inv.begin(); it != inv.end(); it++) {
-			inventory.emplace_back(std::move(*it));
+			this->addItem(*it);
 		}
 		return *this;
 	}
@@ -202,7 +203,6 @@ public:
 		for (items::iterator iit = inventory.begin(); iit != inventory.end(); iit++) {
 			iit->reset();
 		}
-		std::cerr << "LOG: RoomID: " << roomID << " deleted" << std::endl;
 	}
 };
 
@@ -235,16 +235,13 @@ public:
 	 * 
 	 * @return objID (int) 
 	 */
-	int getID() const {return objID;}
+	int const getID() {return objID;}
 	/**
 	 * @brief Get the Description of the object
 	 * 
 	 * @return objectDescription (std::string) 
 	 */
 	std::string getDescription() const {return objectDescriptor;}
-	~Object() {
-		std::cerr << "LOG: ObjectID: " << objID << " deleted" << std::endl;
-	}
 };
 
 /**
@@ -321,6 +318,7 @@ public:
 			const std::string desc(actual->FirstChildElement("description")->GetText());
 			int id = 0;
 			actual->FirstChildElement("id")->QueryIntText(&id);
+			std::cout << id << std::endl;
 			retItems.emplace_back(new Object(objName, id, desc));
 			actual = actual->NextSiblingElement("object");
 		}
@@ -333,8 +331,8 @@ public:
 	 * @return std::vector<int> 
 	 */
 	std::vector<int> trackConnections(tinyxml2::XMLElement* conns) {
-		tinyxml2::XMLElement* firstConns = conns->FirstChildElement("id");
-		tinyxml2::XMLElement* actual = firstConns;
+		tinyxml2::XMLElement* firstConn = conns->FirstChildElement("id");
+		tinyxml2::XMLElement* actual = firstConn;
 		std::vector<int> neighbours;
 		while(actual) {
 			int nid = 0;
@@ -342,6 +340,8 @@ public:
 			neighbours.push_back(nid); 
 			actual = actual->NextSiblingElement("id");
 		}
+
+		std::cout << actual << std::endl;
 		return neighbours;
 	}
 	void loadRooms(tinyxml2::XMLElement* firstRoom) {
@@ -350,14 +350,22 @@ public:
 		while(actual) {
 			const std::string roomName(actual->FirstChildElement("name")->GetText());
 			const std::string roomDescription(actual->FirstChildElement("description")->GetText());
-			int roomID;
+			int roomID = 0;
 			actual->FirstChildElement("id")->QueryIntText(&roomID);
 			RoomFactory(roomName, roomID, roomDescription); // Construct room with name, id and desc
-			tinyxml2::XMLElement* invEle = firstRoom->FirstChildElement("inventory"); // TODO
-			items inv = makeInventory(invEle);
-			worldRooms[worldRooms.size()-1]->addItems(inv);
+			tinyxml2::XMLElement* invEle = actual->FirstChildElement("inventory");
+			tinyxml2::XMLElement* actualInv = invEle->FirstChildElement("object");
+			while(actualInv) {
+				const std::string objName(actualInv->FirstChildElement("name")->GetText());
+				const std::string desc(actualInv->FirstChildElement("description")->GetText());
+				int objectID = 0;
+				actualInv->FirstChildElement("id")->QueryIntText(&objectID);
+				item tmpItem = item(new Object(objName, objectID, desc));
+				worldRooms[worldRooms.size()-1]->addItem(tmpItem);
+				actualInv = actualInv->NextSiblingElement("object");
+			}
 			tinyxml2::XMLElement* conns = actual->FirstChildElement("connections");
-			//TODO segmentation fault in this function roomConnectionMap[roomID] = trackConnections(conns);
+			roomConnectionMap[roomID] = trackConnections(conns); //std::vector<int>({1,2,3});
 			actual = actual->NextSiblingElement(elementName);
 		}
 	}
