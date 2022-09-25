@@ -14,7 +14,6 @@ class Room;
 class Entity;
 class Mission;
 class Choice;
-class Connection;
 
 /**
  * @typedef Room wrapped in a shared_ptr to be able to connect it to other nodes.
@@ -340,10 +339,13 @@ public:
 			neighbours.push_back(nid); 
 			actual = actual->NextSiblingElement("id");
 		}
-
-		std::cout << actual << std::endl;
 		return neighbours;
 	}
+	/**
+	 * @brief This function iterates through the room elements of the world element in the xml file and constructs the rooms of the world.
+	 * 
+	 * @param firstRoom 
+	 */
 	void loadRooms(tinyxml2::XMLElement* firstRoom) {
 		const char* elementName = "room";
 		tinyxml2::XMLElement* actual = firstRoom;
@@ -361,25 +363,45 @@ public:
 				int objectID = 0;
 				actualInv->FirstChildElement("id")->QueryIntText(&objectID);
 				item tmpItem = item(new Object(objName, objectID, desc));
-				worldRooms[worldRooms.size()-1]->addItem(tmpItem);
+				worldRooms.back()->addItem(tmpItem);
 				actualInv = actualInv->NextSiblingElement("object");
 			}
 			tinyxml2::XMLElement* conns = actual->FirstChildElement("connections");
-			roomConnectionMap[roomID] = trackConnections(conns); //std::vector<int>({1,2,3});
+			roomConnectionMap.insert(std::make_pair(roomID, trackConnections(conns)));
 			actual = actual->NextSiblingElement(elementName);
 		}
 	}
+	/**
+	 * @brief This function is called only after loadRooms() function to create connection between rooms based on the connection map.
+	 * 
+	 */
 	void connectRooms() {
-
+		for (std::map<int, std::vector<int>>::iterator it = roomConnectionMap.begin(); it != roomConnectionMap.end(); it++) {
+			int parentID = it->first;	
+			nodes::iterator parentRoom = std::find_if(worldRooms.begin(), worldRooms.end(), 
+					[&parentID](node& r) {if (r->getID() == parentID) return true; return false;});
+			if (parentRoom != worldRooms.end()) {
+				for (std::vector<int>::iterator sit = it->second.begin(); sit != it->second.end(); sit++) {
+					int id2find = *sit;
+					nodes::iterator childRoom = std::find_if(worldRooms.begin(), worldRooms.end(), 
+						[&id2find](node& r) {if (r->getID() == id2find) return true; return false;});
+					if (childRoom != worldRooms.end()) {
+						parentRoom->get()->addNeighbour(*childRoom);
+					}
+				}	
+			}
+		}
 	}
 	void initWorld(const char* path2story) {
 		story.LoadFile(path2story);
 		tinyxml2::XMLElement* worldElement = story.FirstChildElement("world");
 		loadRooms(worldElement->FirstChildElement("room"));
+		connectRooms();
 	}
 	void destroyWorld() {
 		for (nodes::iterator it = worldRooms.begin(); it != worldRooms.end(); it++) {
 			it->reset();
+			std::cout << it->use_count() << std::endl;
 		}
 		for (entities::iterator it = population.begin(); it != population.end(); it++) {
 			it->reset();

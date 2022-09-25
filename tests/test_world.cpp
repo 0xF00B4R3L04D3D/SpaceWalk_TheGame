@@ -5,10 +5,10 @@ class WorldTest : public ::testing::Test {
     protected:
         World testWorld;
         void SetUp() override {
-            testWorld.initWorld("../story.xml");
+            testWorld.initWorld("../test_story.xml");
         }
         void TearDown() override {
-            testWorld.destroyWorld();
+            //testWorld.destroyWorld();
         }
 };
 
@@ -38,4 +38,8 @@ TEST_F(WorldTest, test_initWorld) {
             EXPECT_EQ(testWorld.getWorldRooms()[i]->getItems()[j]->getID(), (i+1));
         }
     }
+    EXPECT_EQ(testWorld.getWorldRooms()[0]->getNeighbours()[0]->getID(), 2);
+    EXPECT_EQ(testWorld.getWorldRooms()[1]->getNeighbours()[0]->getID(), 1);
+    EXPECT_EQ(testWorld.getWorldRooms()[1]->getNeighbours()[1]->getID(), 3);
+    EXPECT_EQ(testWorld.getWorldRooms()[2]->getNeighbours()[0]->getID(), 2);
 }
