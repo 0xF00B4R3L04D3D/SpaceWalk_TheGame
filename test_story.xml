@@ -15,6 +15,16 @@
         <connections>
             <id>2</id>
         </connections>
+        <entity>
+            <name>TestEntity1</name>
+            <inventory>
+                <object>
+                    <name>TestObject4</name>
+                    <description>This is an object in TestEntity1's inv.</description>
+                    <id>4</id>
+                </object>
+            </inventory>
+        </entity>
     </room>
     <room>
         <name>TestRoom2</name>

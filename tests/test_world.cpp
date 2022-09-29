@@ -8,7 +8,7 @@ class WorldTest : public ::testing::Test {
             testWorld.initWorld("../test_story.xml");
         }
         void TearDown() override {
-            //testWorld.destroyWorld();
+            testWorld.destroyWorld();
         }
 };
 
@@ -32,9 +32,9 @@ TEST_F(WorldTest, test_xml_module) {
 
 TEST_F(WorldTest, test_initWorld) {
     ASSERT_EQ(testWorld.getWorldRooms().size(), 3);
-    for (int i = 0; i < testWorld.getWorldRooms().size(); i++) {
+    for (int i = 0; i < int(testWorld.getWorldRooms().size()); i++) {
         EXPECT_EQ(testWorld.getWorldRooms()[i]->getID(), (i+1));
-        for (int j = 0; j < testWorld.getWorldRooms()[i]->getItems().size(); j++) {
+        for (int j = 0; j < int(testWorld.getWorldRooms()[i]->getItems().size()); j++) {
             EXPECT_EQ(testWorld.getWorldRooms()[i]->getItems()[j]->getID(), (i+1));
         }
     }
@@ -42,4 +42,8 @@ TEST_F(WorldTest, test_initWorld) {
     EXPECT_EQ(testWorld.getWorldRooms()[1]->getNeighbours()[0]->getID(), 1);
     EXPECT_EQ(testWorld.getWorldRooms()[1]->getNeighbours()[1]->getID(), 3);
     EXPECT_EQ(testWorld.getWorldRooms()[2]->getNeighbours()[0]->getID(), 2);
+    std::string firstEntName = "TestEntity1";
+    EXPECT_EQ(testWorld.getPopulation().size(), 1);
+    EXPECT_STREQ(testWorld.getPopulation()[0]->getName().c_str(), firstEntName.c_str());
+    EXPECT_EQ(testWorld.getPopulation()[0]->getInventory()[0]->getID(), 4);
 }

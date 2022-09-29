@@ -51,6 +51,74 @@ typedef std::vector<ent> entities;
  */
 typedef std::pair<int, std::vector<int>> roomConnection;
 
+enum missionStatus{finished, in_progress};
+
+/**
+ * @brief class Mission helps to create a mission system, that will give objectives, to accomplish, for the player.
+ * This will give the player a direction, how to finish the story.
+ * 
+ */
+class Mission {
+	std::string description;
+	node targetRoom;
+	item targetItem;
+	missionStatus status;
+public:
+	Mission(node tr) : targetRoom(tr), status(in_progress) {}
+	Mission(item ti) : targetItem(std::move(ti)), status(in_progress) {}
+	Mission(node tr, item ti) : targetRoom(tr), targetItem(std::move(ti)), status(in_progress) {}
+	virtual void complete() {}	
+};
+
+/**
+ * @brief Base class for any object that can be owned by an Entity or Room.
+ * 
+ */
+class Object {
+	const std::string objectName;
+	const std::string objectDescriptor;
+	const int objID;
+	
+public:
+	/**
+	 * @brief Construct a new Object object
+	 * 
+	 * @param n (std::string&) Name of the Object
+	 * @param d (std::string&): Description of the object
+	 * @param id (int): Creation ID of the item
+	 */
+	Object(const std::string& n, const int id, const std::string& d) : objectName(n), objectDescriptor(d), objID(id)  {}
+	/**
+	 * @brief Get the Name object
+	 * 
+	 * @return objectName (std::string) 
+	 */
+	std::string getName() const {return objectName;}
+	/**
+	 * @brief Get the ID of the object
+	 * 
+	 * @return objID (int) 
+	 */
+	int const getID() {return objID;}
+	/**
+	 * @brief Get the Description of the object
+	 * 
+	 * @return objectDescription (std::string) 
+	 */
+	std::string getDescription() const {return objectDescriptor;}
+	virtual ~Object() {}
+};
+
+/**
+ * @brief An object that can open a room.
+ * 
+ */
+class Key : public Object {
+	const int keyID;
+public:
+	Key(const int kid, const std::string& n, const int id, const std::string& d) : Object(n, id, d), keyID(kid) {}
+};
+
 /**
  * @brief Base class for a NPC, USER or any other Entity living in the game world.
  * 
@@ -84,9 +152,18 @@ public:
 	 * @param i (item&): Item to move to Entity's inventory
 	 * @return Entity&
 	 */
-	Entity& addItem(Object* i) {
-		inventory.emplace_back(i);
+	Entity& addItem(item &i) {
+		inventory.push_back(std::move(i));
 		return *this;
+	}
+	Entity& addItems(items &i) {
+		for (auto it = i.begin(); it != i.end(); it++) {
+			this->addItem(*it);
+		}
+		return *this;
+	}
+	items& getInventory() {
+		return inventory;
 	}
 	~Entity() {
 		for (items::iterator it = inventory.begin(); it != inventory.end(); it++) {
@@ -95,18 +172,21 @@ public:
 	}
 };
 
+enum LockStatus{locked, unlocked};
+
 /**
  * @brief Part of the World. A room that contains items, that can be collected, players or npc can move in and out of these rooms.
  * 
  * 
  */
 class Room {
-	nodes neighbours; // Neighbouring rooms.
 	const std::string roomName; // Name of the room.
 	const int roomID; // ID of the room, that connects a key to this room.
-	items inventory; // Items, that can be found in the room.
 	const std::string description; // Description of the room.
-	bool locked;
+	LockStatus lock;
+	entities roomPopulation;
+	nodes neighbours; // Neighbouring rooms.
+	items inventory; // Items, that can be found in the room.
 public:
 	/**
 	 * @brief Construct a new Room object
@@ -115,7 +195,7 @@ public:
 	 * @param id (int): This have to be a unique ID to be able to connect keys with rooms. 
 	 * @param desc (std::string&): Description of the room. Cant be changed later.
 	 */
-	Room(const std::string& n, int id, const std::string& desc) : roomName(n), roomID(id), description(desc) {}
+	Room(const std::string& n, int id, const std::string& desc) : roomName(n), roomID(id), description(desc), lock(locked) {}
 	/**
 	 * @brief Get the Name of the Room
 	 * 
@@ -147,7 +227,7 @@ public:
 	 * @return Room&
 	 */
 	Room& addNeighbour(node& nn) {
-		neighbours.push_back(node(nn));
+		neighbours.push_back(nn);
 		return *this;
 	}
 	/**
@@ -191,6 +271,51 @@ public:
 		return *this;
 	}
 	/**
+	 * @brief Add entity to the population of the room.
+	 * 
+	 * @param e 
+	 * @return Room& 
+	 */
+	Room& addEntity(ent& e) {
+		roomPopulation.push_back(e);
+		return *this;
+	}
+	/**
+	 * @brief Add a bunch of entities to the population of the room.
+	 * 
+	 * @param ents 
+	 * @return Room& 
+	 */
+	Room& addEntities(entities& ents) {
+		for (auto e : ents) {
+			this->addEntity(e);
+		}
+		return *this;
+	}
+	Room& setLock(LockStatus stat) {
+		lock = stat;
+		return *this;
+	}
+	/**
+	 * @brief With the right key the room given in the argument can be unlocked.
+	 * 
+	 * @param k key to unlock the room
+	 * @param r room to be unlocked
+	 * @return true 
+	 * @return false 
+	 */
+	bool static unlock(item& k, node r) {
+		Key* k2r = dynamic_cast<Key*>(k.release());
+		if (k2r != nullptr && k->getID() == r->getID()) {
+			r->setLock(unlocked);
+			delete k2r;
+			return true;
+		}
+		Object* o = dynamic_cast<Object*>(k2r);
+		k = std::make_unique<Object>(*o);
+		return false;
+	}
+	/**
 	 * @brief Destroy the Room object. Reset all nodes in the neighours vector and all items in inventory.
 	 *
 	 * 
@@ -203,52 +328,6 @@ public:
 			iit->reset();
 		}
 	}
-};
-
-/**
- * @brief Base class for any object that can be owned by an Entity or Room.
- * 
- */
-class Object {
-	const std::string objectName;
-	const std::string objectDescriptor;
-	const int objID;
-	
-public:
-	/**
-	 * @brief Construct a new Object object
-	 * 
-	 * @param n (std::string&) Name of the Object
-	 * @param d (std::string&): Description of the object
-	 * @param id (int): Creation ID of the item
-	 */
-	Object(const std::string& n, const int id, const std::string& d) : objectName(n), objID(id), objectDescriptor(d) {}
-	/**
-	 * @brief Get the Name object
-	 * 
-	 * @return objectName (std::string) 
-	 */
-	std::string getName() const {return objectName;}
-	/**
-	 * @brief Get the ID of the object
-	 * 
-	 * @return objID (int) 
-	 */
-	int const getID() {return objID;}
-	/**
-	 * @brief Get the Description of the object
-	 * 
-	 * @return objectDescription (std::string) 
-	 */
-	std::string getDescription() const {return objectDescriptor;}
-};
-
-/**
- * @brief An object that can open a room.
- * 
- */
-class Key : public Object {
-	std::string keyID;
 };
 
 /**
@@ -286,7 +365,9 @@ public:
 	 * @param desc (const std::string&): Description of the Room
 	 */
 	void RoomFactory(const std::string& name, int id, const std::string& desc) {
-		worldRooms.emplace_back(new Room(name, id, desc));
+		auto newRoom = std::make_shared<Room>(name, id, desc);
+		worldRooms.emplace_back(newRoom);
+		newRoom.reset();
 	}
 	/**
 	 * @brief Create entity and add it to the population.
@@ -294,7 +375,9 @@ public:
 	 * @param name 
 	 */
 	void EntityFactory(const std::string& name) {
-		population.emplace_back(new Entity(name));
+		auto newEnt = std::make_shared<Entity>(name);
+		population.emplace_back(newEnt);
+		newEnt.reset();
 	}
 	/**
 	 * @brief Get the Story object
@@ -317,8 +400,8 @@ public:
 			const std::string desc(actual->FirstChildElement("description")->GetText());
 			int id = 0;
 			actual->FirstChildElement("id")->QueryIntText(&id);
-			std::cout << id << std::endl;
-			retItems.emplace_back(new Object(objName, id, desc));
+			auto newObj = std::make_unique<Object>(objName, id, desc);
+			retItems.push_back(std::move(newObj));
 			actual = actual->NextSiblingElement("object");
 		}
 		return retItems;
@@ -362,12 +445,17 @@ public:
 				const std::string desc(actualInv->FirstChildElement("description")->GetText());
 				int objectID = 0;
 				actualInv->FirstChildElement("id")->QueryIntText(&objectID);
-				item tmpItem = item(new Object(objName, objectID, desc));
+				auto tmpItem = std::make_unique<Object>(objName, objectID, desc);
 				worldRooms.back()->addItem(tmpItem);
 				actualInv = actualInv->NextSiblingElement("object");
 			}
 			tinyxml2::XMLElement* conns = actual->FirstChildElement("connections");
 			roomConnectionMap.insert(std::make_pair(roomID, trackConnections(conns)));
+			// While loading entities into population, the number of entities loaded must be returned to be able to add these enitites to the room they should be in.
+			int entCount = loadEntities(actual->FirstChildElement("entity"));
+			for (int i = int(population.size())-entCount; i < int(population.size()); i++) {
+				worldRooms.back()->addEntity(population[i]);
+			}
 			actual = actual->NextSiblingElement(elementName);
 		}
 	}
@@ -392,12 +480,41 @@ public:
 			}
 		}
 	}
+	/**
+	 * @brief Load entities from xml doc.
+	 * 
+	 * @param firstEle 
+	 */
+	int loadEntities(tinyxml2::XMLElement* firstEle) {
+		tinyxml2::XMLElement* actual = firstEle;
+		int counter = 0;
+		while(actual) {
+			const std::string name = actual->FirstChildElement("name")->GetText();
+			tinyxml2::XMLElement* invele = actual->FirstChildElement("inventory");
+			items inv = makeInventory(invele);
+			ent newEnt = std::make_shared<Entity>(name);
+			population.push_back(newEnt);
+			population.back()->addItems(inv);
+			actual = actual->NextSiblingElement("entity");
+			counter++;
+		}
+		return counter;
+	}
+	/**
+	 * @brief Initialize world with the xml story file.
+	 * 
+	 * @param path2story 
+	 */
 	void initWorld(const char* path2story) {
 		story.LoadFile(path2story);
 		tinyxml2::XMLElement* worldElement = story.FirstChildElement("world");
 		loadRooms(worldElement->FirstChildElement("room"));
 		connectRooms();
 	}
+	/**
+	 * @brief Free resources used by world.
+	 * 
+	 */
 	void destroyWorld() {
 		for (nodes::iterator it = worldRooms.begin(); it != worldRooms.end(); it++) {
 			it->reset();
@@ -407,12 +524,6 @@ public:
 			it->reset();
 		}
 	}
-	/**
-	 * @brief Destroy the World object. This is very importand step, because all things in the world are contained in smart pointers.
-	 * 
-	 */
-	~World() {
-		destroyWorld();
-	}
+	virtual ~World() {}	
 };
 #endif

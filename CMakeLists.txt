@@ -3,6 +3,9 @@ cmake_minimum_required(VERSION 3.14)
 # set the project name
 project(SpaceWalk VERSION 0.1)
 
+# common comp flags
+add_compile_options(-g -Wall)
+
 # set C++ standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -19,6 +22,7 @@ option(TEST_UNIT "Build unittest, that tries to cover the core functionalities o
 # add include directories, where header files can be found
 include_directories("${PROJECT_SOURCE_DIR}/src")
 add_library(tinyxml2 src/tinyxml2.cpp)
+#add_library(engine src/engine.cpp)
 
 macro(runtest testname)
 	include(FetchContent)
