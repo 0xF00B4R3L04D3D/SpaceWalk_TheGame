@@ -156,12 +156,23 @@ public:
 		inventory.push_back(std::move(i));
 		return *this;
 	}
+	/**
+	 * @brief Add multiple items from an item vector to the entity's inventory.
+	 * 
+	 * @param i 
+	 * @return Entity& 
+	 */
 	Entity& addItems(items &i) {
 		for (auto it = i.begin(); it != i.end(); it++) {
 			this->addItem(*it);
 		}
 		return *this;
 	}
+	/**
+	 * @brief Get the Inventory object
+	 * 
+	 * @return items& 
+	 */
 	items& getInventory() {
 		return inventory;
 	}
@@ -172,6 +183,10 @@ public:
 	}
 };
 
+/**
+ * @brief  Enum class to make tracking room lockstatus easier.
+ * 
+ */
 enum LockStatus{locked, unlocked};
 
 /**
@@ -292,6 +307,12 @@ public:
 		}
 		return *this;
 	}
+	/**
+	 * @brief Set the Lock object
+	 * 
+	 * @param stat 
+	 * @return Room& 
+	 */
 	Room& setLock(LockStatus stat) {
 		lock = stat;
 		return *this;
@@ -342,6 +363,10 @@ class World {
 	tinyxml2::XMLDocument story;
 	std::map<int, std::vector<int>> roomConnectionMap;
 public:
+	/**
+	 * @brief Construct a new World object
+	 * 
+	 */
 	World() {}
 	/**
 	 * @brief Construct a new World object
@@ -351,9 +376,19 @@ public:
 	World(const char* path2story) {
 		story.LoadFile(path2story);
 	}
+	/**
+	 * @brief Get the World Rooms object
+	 * 
+	 * @return nodes 
+	 */
 	nodes getWorldRooms() const {
 		return worldRooms;
 	}
+	/**
+	 * @brief Get the Population object
+	 * 
+	 * @return entities 
+	 */
 	entities getPopulation() const {
 		return population;
 	}
