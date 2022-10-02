@@ -14,6 +14,7 @@
         </inventory>
         <connections>
             <id>2</id>
+            <id>3</id>
         </connections>
         <entity>
             <name>TestEntity1</name>
@@ -54,6 +55,7 @@
             </object>
         </inventory>
         <connections>
+            <id>1</id>
             <id>2</id>
         </connections>
     </room>
