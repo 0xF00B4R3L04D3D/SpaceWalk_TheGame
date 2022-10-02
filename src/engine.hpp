@@ -29,7 +29,7 @@ typedef std::unique_ptr<Object> item;
  * @typedef Entity wrapped in shared_ptr, so World can keep track.
  * 
  */
-typedef std::shared_ptr<Entity> ent;
+typedef std::unique_ptr<Entity> ent;
 /**
  * @typedef Vector of nodes.
  * 
@@ -176,7 +176,7 @@ public:
 	items& getInventory() {
 		return inventory;
 	}
-	~Entity() {
+	virtual ~Entity() {
 		for (items::iterator it = inventory.begin(); it != inventory.end(); it++) {
 			it->reset();
 		}
@@ -253,7 +253,7 @@ public:
 	 */
 	Room& addNeighbours(nodes& ns) {
 		for (nodes::const_iterator it = ns.cbegin(); it != ns.cend(); it++) {
-			neighbours.push_back(node(*it));
+			neighbours.push_back(*it);
 		}
 		return *this;
 	}
@@ -292,7 +292,7 @@ public:
 	 * @return Room& 
 	 */
 	Room& addEntity(ent& e) {
-		roomPopulation.push_back(e);
+		roomPopulation.emplace_back(std::move(e));
 		return *this;
 	}
 	/**
@@ -302,8 +302,8 @@ public:
 	 * @return Room& 
 	 */
 	Room& addEntities(entities& ents) {
-		for (auto e : ents) {
-			this->addEntity(e);
+		for (entities::iterator it = ents.begin(); it != ents.end(); it++) {
+			this->addEntity(*it);
 		}
 		return *this;
 	}
@@ -336,6 +336,7 @@ public:
 		k = std::make_unique<Object>(*o);
 		return false;
 	}
+	const entities& getPopulation() {return roomPopulation;}
 	/**
 	 * @brief Destroy the Room object. Reset all nodes in the neighours vector and all items in inventory.
 	 *
@@ -348,6 +349,9 @@ public:
 		for (items::iterator iit = inventory.begin(); iit != inventory.end(); iit++) {
 			iit->reset();
 		}
+		for (entities::iterator eit = roomPopulation.begin(); eit != roomPopulation.end(); eit++) {
+			eit->reset();
+		}
 	}
 };
 
@@ -359,7 +363,6 @@ public:
 class World {
 	std::string title;
 	nodes worldRooms;
-	entities population;
 	tinyxml2::XMLDocument story;
 	std::map<int, std::vector<int>> roomConnectionMap;
 public:
@@ -385,14 +388,6 @@ public:
 		return worldRooms;
 	}
 	/**
-	 * @brief Get the Population object
-	 * 
-	 * @return entities 
-	 */
-	entities getPopulation() const {
-		return population;
-	}
-	/**
 	 * @brief Create Room with initial params and add it to worldRooms.
 	 * 
 	 * @param title (const std::string&): Name of the Room
@@ -401,18 +396,7 @@ public:
 	 */
 	void RoomFactory(const std::string& name, int id, const std::string& desc) {
 		auto newRoom = std::make_shared<Room>(name, id, desc);
-		worldRooms.emplace_back(newRoom);
-		newRoom.reset();
-	}
-	/**
-	 * @brief Create entity and add it to the population.
-	 * 
-	 * @param name 
-	 */
-	void EntityFactory(const std::string& name) {
-		auto newEnt = std::make_shared<Entity>(name);
-		population.emplace_back(newEnt);
-		newEnt.reset();
+		worldRooms.push_back(newRoom);
 	}
 	/**
 	 * @brief Get the Story object
@@ -487,10 +471,7 @@ public:
 			tinyxml2::XMLElement* conns = actual->FirstChildElement("connections");
 			roomConnectionMap.insert(std::make_pair(roomID, trackConnections(conns)));
 			// While loading entities into population, the number of entities loaded must be returned to be able to add these enitites to the room they should be in.
-			int entCount = loadEntities(actual->FirstChildElement("entity"));
-			for (int i = int(population.size())-entCount; i < int(population.size()); i++) {
-				worldRooms.back()->addEntity(population[i]);
-			}
+			loadEntities(actual->FirstChildElement("entity"), worldRooms.back());
 			actual = actual->NextSiblingElement(elementName);
 		}
 	}
@@ -499,19 +480,32 @@ public:
 	 * 
 	 */
 	void connectRooms() {
-		for (std::map<int, std::vector<int>>::iterator it = roomConnectionMap.begin(); it != roomConnectionMap.end(); it++) {
-			int parentID = it->first;	
-			nodes::iterator parentRoom = std::find_if(worldRooms.begin(), worldRooms.end(), 
-					[&parentID](node& r) {if (r->getID() == parentID) return true; return false;});
-			if (parentRoom != worldRooms.end()) {
-				for (std::vector<int>::iterator sit = it->second.begin(); sit != it->second.end(); sit++) {
-					int id2find = *sit;
-					nodes::iterator childRoom = std::find_if(worldRooms.begin(), worldRooms.end(), 
-						[&id2find](node& r) {if (r->getID() == id2find) return true; return false;});
-					if (childRoom != worldRooms.end()) {
-						parentRoom->get()->addNeighbour(*childRoom);
+		for (auto pair : roomConnectionMap) {
+			int parentID = pair.first;	
+			node parentRoom;
+			for (auto room : worldRooms) {
+				if (parentID == room->getID()) {
+					parentRoom=room;
+					break;
+				}
+			}
+			/*nodes::iterator parentRoom = std::find_if(worldRooms.begin(), worldRooms.end(), 
+					[&parentID](node& r) {if (r->getID() == parentID) return true; return false;});*/
+			if (parentRoom != nullptr) {
+				for (auto id : pair.second) {
+					node childRoom;
+					for (auto neighbour : worldRooms) {
+						if (id == neighbour->getID()) { 
+							childRoom=neighbour;
+							break;
+						}
 					}
-				}	
+					/*nodes::iterator childRoom = std::find_if(worldRooms.begin(), worldRooms.end(), 
+						[&id](node& r) {if (r->getID() == id) return true; return false;});*/
+					if (childRoom != nullptr) {
+						parentRoom->addNeighbour(childRoom);
+					}
+				}
 			}
 		}
 	}
@@ -520,16 +514,16 @@ public:
 	 * 
 	 * @param firstEle 
 	 */
-	int loadEntities(tinyxml2::XMLElement* firstEle) {
+	int loadEntities(tinyxml2::XMLElement* firstEle, node& r) {
 		tinyxml2::XMLElement* actual = firstEle;
 		int counter = 0;
 		while(actual) {
 			const std::string name = actual->FirstChildElement("name")->GetText();
 			tinyxml2::XMLElement* invele = actual->FirstChildElement("inventory");
 			items inv = makeInventory(invele);
-			ent newEnt = std::make_shared<Entity>(name);
-			population.push_back(newEnt);
-			population.back()->addItems(inv);
+			ent newEnt = std::make_unique<Entity>(name);
+			newEnt->addItems(inv);
+			r->addEntity(newEnt);
 			actual = actual->NextSiblingElement("entity");
 			counter++;
 		}
@@ -555,10 +549,9 @@ public:
 			it->reset();
 			std::cout << it->use_count() << std::endl;
 		}
-		for (entities::iterator it = population.begin(); it != population.end(); it++) {
-			it->reset();
-		}
 	}
-	virtual ~World() {}	
+	~World() {
+		this->destroyWorld();
+	}
 };
 #endif
