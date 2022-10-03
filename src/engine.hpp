@@ -19,7 +19,7 @@ class Choice;
  * @typedef Room wrapped in a shared_ptr to be able to connect it to other nodes.
  * 
  */
-typedef std::shared_ptr<Room> node;
+typedef std::unique_ptr<Room> node;
 /**
  * @typedef Object wrapped in a unique_ptr, because it can be only owned by one Entity or Room.
  * 
@@ -35,6 +35,11 @@ typedef std::unique_ptr<Entity> ent;
  * 
  */
 typedef std::vector<node> nodes;
+/**
+ * @typedef Vector of room id's. 
+ * 
+ */
+typedef std::vector<int> neighbours;
 /**
  * @typedef Vector of items.
  * 
@@ -52,23 +57,6 @@ typedef std::vector<ent> entities;
 typedef std::pair<int, std::vector<int>> roomConnection;
 
 enum missionStatus{finished, in_progress};
-
-/**
- * @brief class Mission helps to create a mission system, that will give objectives, to accomplish, for the player.
- * This will give the player a direction, how to finish the story.
- * 
- */
-class Mission {
-	std::string description;
-	node targetRoom;
-	item targetItem;
-	missionStatus status;
-public:
-	Mission(node tr) : targetRoom(tr), status(in_progress) {}
-	Mission(item ti) : targetItem(std::move(ti)), status(in_progress) {}
-	Mission(node tr, item ti) : targetRoom(tr), targetItem(std::move(ti)), status(in_progress) {}
-	virtual void complete() {}	
-};
 
 /**
  * @brief Base class for any object that can be owned by an Entity or Room.
@@ -200,7 +188,7 @@ class Room {
 	const std::string description; // Description of the room.
 	LockStatus lock;
 	entities roomPopulation;
-	nodes neighbours; // Neighbouring rooms.
+	neighbours connectedRooms; // Neighbouring rooms.
 	items inventory; // Items, that can be found in the room.
 public:
 	/**
@@ -210,7 +198,7 @@ public:
 	 * @param id (int): This have to be a unique ID to be able to connect keys with rooms. 
 	 * @param desc (std::string&): Description of the room. Cant be changed later.
 	 */
-	Room(const std::string& n, int id, const std::string& desc) : roomName(n), roomID(id), description(desc), lock(locked) {}
+	Room(const std::string& n, int id, const std::string& desc, neighbours cn) : roomName(n), roomID(id), description(desc), lock(locked), connectedRooms(cn) {}
 	/**
 	 * @brief Get the Name of the Room
 	 * 
@@ -234,15 +222,15 @@ public:
 	 * 
 	 * @return neighbours (const nodes) 
 	 */
-	nodes getNeighbours() const {return neighbours;}	
+	neighbours getNeighbours() const {return connectedRooms;}	
 	/**
 	 * @brief Add a neighbour to the Neighours object
 	 * 
 	 * @param nn (node&) A new Room, that will be added to the Neighbours object.
 	 * @return Room&
 	 */
-	Room& addNeighbour(node& nn) {
-		neighbours.push_back(nn);
+	Room& addNeighbour(int rid) {
+		connectedRooms.push_back(rid);
 		return *this;
 	}
 	/**
@@ -251,9 +239,9 @@ public:
 	 * @param ns (nodes&) Vector of Neighbours object 
 	 * @return Room& 
 	 */
-	Room& addNeighbours(nodes& ns) {
-		for (nodes::const_iterator it = ns.cbegin(); it != ns.cend(); it++) {
-			neighbours.push_back(*it);
+	Room& addNeighbours(neighbours rids) {
+		for (auto rid : rids) {
+			this->addNeighbour(rid);
 		}
 		return *this;
 	}
@@ -262,7 +250,7 @@ public:
 	 * 
 	 * @return items const& 
 	 */
-	items& getItems() {return inventory;}	
+	const items& getItems() {return inventory;}	
 	/**
 	 * @brief Add new item to the Inventory of the Room 
 	 * 
@@ -325,7 +313,7 @@ public:
 	 * @return true 
 	 * @return false 
 	 */
-	bool static unlock(item& k, node r) {
+	bool static unlock(item& k, node& r) {
 		Key* k2r = dynamic_cast<Key*>(k.release());
 		if (k2r != nullptr && k->getID() == r->getID()) {
 			r->setLock(unlocked);
@@ -343,9 +331,6 @@ public:
 	 * 
 	 */
 	~Room() {
-		for (nodes::iterator nit = neighbours.begin(); nit != neighbours.end(); nit++) {
-			nit->reset();
-		}
 		for (items::iterator iit = inventory.begin(); iit != inventory.end(); iit++) {
 			iit->reset();
 		}
@@ -353,6 +338,23 @@ public:
 			eit->reset();
 		}
 	}
+};
+
+/**
+ * @brief class Mission helps to create a mission system, that will give objectives, to accomplish, for the player.
+ * This will give the player a direction, how to finish the story.
+ * 
+ */
+class Mission {
+	std::string description;
+	int targetRoom;
+	int targetItem;
+	missionStatus status;
+public:
+	Mission(node& tr) : targetRoom(tr->getID()), status(in_progress) {}
+	Mission(item& ti) : targetItem(ti->getID()), status(in_progress) {}
+	Mission(node& tr,item& ti) : targetRoom(tr->getID()), targetItem(ti->getID()), status(in_progress) {}
+	virtual void complete() {}	
 };
 
 /**
@@ -384,7 +386,7 @@ public:
 	 * 
 	 * @return nodes 
 	 */
-	nodes getWorldRooms() const {
+	nodes& getWorldRooms() {
 		return worldRooms;
 	}
 	/**
@@ -394,9 +396,9 @@ public:
 	 * @param id (const std::string&): ID of the Room
 	 * @param desc (const std::string&): Description of the Room
 	 */
-	void RoomFactory(const std::string& name, int id, const std::string& desc) {
-		auto newRoom = std::make_shared<Room>(name, id, desc);
-		worldRooms.push_back(newRoom);
+	void RoomFactory(const std::string& name, int id, const std::string& desc, neighbours nids) {
+		auto newRoom = std::make_unique<Room>(name, id, desc, nids);
+		worldRooms.emplace_back(std::move(newRoom));
 	}
 	/**
 	 * @brief Get the Story object
@@ -431,17 +433,17 @@ public:
 	 * @param conns 
 	 * @return std::vector<int> 
 	 */
-	std::vector<int> trackConnections(tinyxml2::XMLElement* conns) {
+	neighbours parseConnections(tinyxml2::XMLElement* conns) {
 		tinyxml2::XMLElement* firstConn = conns->FirstChildElement("id");
 		tinyxml2::XMLElement* actual = firstConn;
-		std::vector<int> neighbours;
+		std::vector<int> connections;
 		while(actual) {
 			int nid = 0;
 			actual->QueryIntText(&nid);
-			neighbours.push_back(nid); 
+			connections.push_back(nid); 
 			actual = actual->NextSiblingElement("id");
 		}
-		return neighbours;
+		return connections;
 	}
 	/**
 	 * @brief This function iterates through the room elements of the world element in the xml file and constructs the rooms of the world.
@@ -456,7 +458,8 @@ public:
 			const std::string roomDescription(actual->FirstChildElement("description")->GetText());
 			int roomID = 0;
 			actual->FirstChildElement("id")->QueryIntText(&roomID);
-			RoomFactory(roomName, roomID, roomDescription); // Construct room with name, id and desc
+			tinyxml2::XMLElement* conns = actual->FirstChildElement("connections");
+			RoomFactory(roomName, roomID, roomDescription, parseConnections(conns)); // Construct room with name, id and desc
 			tinyxml2::XMLElement* invEle = actual->FirstChildElement("inventory");
 			tinyxml2::XMLElement* actualInv = invEle->FirstChildElement("object");
 			while(actualInv) {
@@ -468,45 +471,8 @@ public:
 				worldRooms.back()->addItem(tmpItem);
 				actualInv = actualInv->NextSiblingElement("object");
 			}
-			tinyxml2::XMLElement* conns = actual->FirstChildElement("connections");
-			roomConnectionMap.insert(std::make_pair(roomID, trackConnections(conns)));
-			// While loading entities into population, the number of entities loaded must be returned to be able to add these enitites to the room they should be in.
 			loadEntities(actual->FirstChildElement("entity"), worldRooms.back());
 			actual = actual->NextSiblingElement(elementName);
-		}
-	}
-	/**
-	 * @brief This function is called only after loadRooms() function to create connection between rooms based on the connection map.
-	 * 
-	 */
-	void connectRooms() {
-		for (auto pair : roomConnectionMap) {
-			int parentID = pair.first;	
-			node parentRoom;
-			for (auto room : worldRooms) {
-				if (parentID == room->getID()) {
-					parentRoom=room;
-					break;
-				}
-			}
-			/*nodes::iterator parentRoom = std::find_if(worldRooms.begin(), worldRooms.end(), 
-					[&parentID](node& r) {if (r->getID() == parentID) return true; return false;});*/
-			if (parentRoom != nullptr) {
-				for (auto id : pair.second) {
-					node childRoom;
-					for (auto neighbour : worldRooms) {
-						if (id == neighbour->getID()) { 
-							childRoom=neighbour;
-							break;
-						}
-					}
-					/*nodes::iterator childRoom = std::find_if(worldRooms.begin(), worldRooms.end(), 
-						[&id](node& r) {if (r->getID() == id) return true; return false;});*/
-					if (childRoom != nullptr) {
-						parentRoom->addNeighbour(childRoom);
-					}
-				}
-			}
 		}
 	}
 	/**
@@ -538,7 +504,6 @@ public:
 		story.LoadFile(path2story);
 		tinyxml2::XMLElement* worldElement = story.FirstChildElement("world");
 		loadRooms(worldElement->FirstChildElement("room"));
-		connectRooms();
 	}
 	/**
 	 * @brief Free resources used by world.
@@ -547,7 +512,6 @@ public:
 	void destroyWorld() {
 		for (nodes::iterator it = worldRooms.begin(); it != worldRooms.end(); it++) {
 			it->reset();
-			std::cout << it->use_count() << std::endl;
 		}
 	}
 	~World() {

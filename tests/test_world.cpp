@@ -38,10 +38,10 @@ TEST_F(WorldTest, test_initWorld) {
             EXPECT_EQ(testWorld.getWorldRooms()[i]->getItems()[j]->getID(), (i+1));
         }
     }
-    EXPECT_EQ(testWorld.getWorldRooms()[0]->getNeighbours()[0]->getID(), 2);
-    EXPECT_EQ(testWorld.getWorldRooms()[1]->getNeighbours()[0]->getID(), 1);
-    EXPECT_EQ(testWorld.getWorldRooms()[1]->getNeighbours()[1]->getID(), 3);
-    EXPECT_EQ(testWorld.getWorldRooms()[2]->getNeighbours()[1]->getID(), 2);
+    EXPECT_EQ(testWorld.getWorldRooms()[0]->getNeighbours()[0], 2);
+    EXPECT_EQ(testWorld.getWorldRooms()[1]->getNeighbours()[0], 1);
+    EXPECT_EQ(testWorld.getWorldRooms()[1]->getNeighbours()[1], 3);
+    EXPECT_EQ(testWorld.getWorldRooms()[2]->getNeighbours()[1], 2);
     std::string firstEntName = "TestEntity1";
     EXPECT_EQ(testWorld.getWorldRooms()[0]->getPopulation().size(), 1);
     EXPECT_STREQ(testWorld.getWorldRooms()[0]->getPopulation()[0]->getName().c_str(), firstEntName.c_str());
